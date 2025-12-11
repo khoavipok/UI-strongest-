@@ -32,6 +32,7 @@ function UILibrary:CreateWindow(title, size)
     MainFrame.Name = "MainWindow"
     MainFrame.Active = true
     MainFrame.Selectable = true
+    MainFrame.Draggable = true  -- BẬT TÍNH NĂNG KÉO
     
     local MainCorner = Instance.new("UICorner", MainFrame)
     MainCorner.CornerRadius = UDim.new(0, 12)
@@ -127,39 +128,69 @@ function UILibrary:CreateWindow(title, size)
     
     -- Biến trạng thái
     local Hidden = false
+    
+    -- 🔧 **FIX KÉO UI HOÀN HẢO**
+    -- Biến để theo dõi kéo
     local isDragging = false
     local dragStart, frameStart
     
-    -- 🔧 **FIX 1: KÉO ĐƯỢC TỪ BẤT KỲ ĐÂU TRÊN UI**
-    MainFrame.InputBegan:Connect(function(input)
+    -- Hàm bắt đầu kéo - HOẠT ĐỘNG VỚI TOÀN BỘ MAINFRAME
+    local function startDragging(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 then
             isDragging = true
             dragStart = input.Position
             frameStart = MainFrame.Position
             
+            -- Kết nối sự kiện thay đổi input
             local connection
             connection = input.Changed:Connect(function()
                 if input.UserInputState == Enum.UserInputState.End then
                     isDragging = false
-                    if connection then connection:Disconnect() end
+                    if connection then
+                        connection:Disconnect()
+                    end
+                end
+            end)
+        end
+    end
+    
+    -- Kết nối sự kiện kéo cho MainFrame
+    MainFrame.InputBegan:Connect(startDragging)
+    
+    -- Kết nối sự kiện kéo cho TopBar (phòng trường hợp)
+    TopBar.InputBegan:Connect(startDragging)
+    
+    -- Xử lý di chuyển khi kéo
+    UserInputService.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement then
+            if isDragging then
+                local delta = input.Position - dragStart
+                MainFrame.Position = UDim2.new(
+                    frameStart.X.Scale, 
+                    frameStart.X.Offset + delta.X,
+                    frameStart.Y.Scale,
+                    frameStart.Y.Offset + delta.Y
+                )
+            end
+        end
+    end)
+    
+    -- NGĂN CHẶN KÉO TỪ CÁC NÚT BÊN TRONG
+    ToggleBtn.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            -- Ngăn không cho kéo từ nút toggle
+            local connection
+            connection = input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    if connection then
+                        connection:Disconnect()
+                    end
                 end
             end)
         end
     end)
     
-    UserInputService.InputChanged:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseMovement and isDragging then
-            local delta = input.Position - dragStart
-            MainFrame.Position = UDim2.new(
-                frameStart.X.Scale, 
-                frameStart.X.Offset + delta.X,
-                frameStart.Y.Scale,
-                frameStart.Y.Offset + delta.Y
-            )
-        end
-    end)
-    
-    -- 🔧 **FIX 2: TOGGLE ẨN/HIỆN ĐÚNG - ẨN HẾT**
+    -- 🔧 TOGGLE ẨN/HIỆN UI
     local function ToggleUI()
         Hidden = not Hidden
         
@@ -222,7 +253,7 @@ function UILibrary:CreateWindow(title, size)
         return Container
     end
     
-    -- 🟢 BUTTON
+    -- 🟢 BUTTON - THÊM NGĂN KÉO
     function Window:CreateButton(text, callback)
         local Btn = Instance.new("TextButton", Container)
         Btn.Size = UDim2.new(1, -20, 0, 40)
@@ -243,6 +274,20 @@ function UILibrary:CreateWindow(title, size)
         BtnStroke.Color = Color3.fromRGB(60, 90, 60)
         BtnStroke.Thickness = 1.5
         
+        -- Ngăn không cho kéo từ nút
+        Btn.InputBegan:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                local connection
+                connection = input.Changed:Connect(function()
+                    if input.UserInputState == Enum.UserInputState.End then
+                        if connection then
+                            connection:Disconnect()
+                        end
+                    end
+                end)
+            end
+        end)
+        
         Btn.MouseEnter:Connect(function()
             Btn.BackgroundColor3 = Color3.fromRGB(50, 80, 50)
             BtnStroke.Color = Color3.fromRGB(70, 110, 70)
@@ -262,7 +307,7 @@ function UILibrary:CreateWindow(title, size)
         return Btn
     end
     
-    -- 🔘 TOGGLE
+    -- 🔘 TOGGLE - THÊM NGĂN KÉO
     function Window:CreateToggle(text, callback, default)
         local ToggleFrame = Instance.new("Frame", Container)
         ToggleFrame.Size = UDim2.new(1, -20, 0, 40)
@@ -326,6 +371,20 @@ function UILibrary:CreateWindow(title, size)
         HitButton.ZIndex = 15
         HitButton.Active = true
         HitButton.Selectable = true
+        
+        -- Ngăn không cho kéo từ nút toggle
+        HitButton.InputBegan:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                local connection
+                connection = input.Changed:Connect(function()
+                    if input.UserInputState == Enum.UserInputState.End then
+                        if connection then
+                            connection:Disconnect()
+                        end
+                    end
+                end)
+            end
+        end)
         
         local state = default or false
         
