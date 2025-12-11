@@ -1,37 +1,43 @@
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
+local TweenService = game:GetService("TweenService")
 local UILibrary = {}
 function UILibrary:CreateWindow(title, size)
-    local ScreenGui = Instance.new("ScreenGui", game.CoreGui)
+    local ScreenGui = Instance.new("ScreenGui", game.CoreGui)   
+    local Overlay = Instance.new("Frame", ScreenGui)
+    Overlay.Size = UDim2.new(1, 0, 1, 0)
+    Overlay.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    Overlay.BackgroundTransparency = 1
+    Overlay.ZIndex = 5    
     local MainFrame = Instance.new("Frame")
     MainFrame.Size = size or UDim2.new(0, 520, 0, 340)
     MainFrame.Position = UDim2.new(0.25, 0, 0.25, 0)
-    MainFrame.BackgroundColor3 = Color3.fromRGB(22, 22, 22)
+    MainFrame.BackgroundColor3 = Color3.fromRGB(25, 35, 25) 
     MainFrame.Active = true
     MainFrame.Draggable = true
     MainFrame.Parent = ScreenGui
     MainFrame.ClipsDescendants = true
-    Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 12)
+    Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 12)   
     local Shadow = Instance.new("ImageLabel", MainFrame)
     Shadow.AnchorPoint = Vector2.new(0.5, 0.5)
     Shadow.Position = UDim2.new(0.5, 0, 0.5, 0)
     Shadow.Size = UDim2.new(1, 40, 1, 40)
     Shadow.BackgroundTransparency = 1
     Shadow.Image = "rbxassetid://6014261993"
-    Shadow.ImageTransparency = 0.48
+    Shadow.ImageTransparency = 0.48   
     local Stroke = Instance.new("UIStroke", MainFrame)
-    Stroke.Color = Color3.fromRGB(55, 55, 55)
+    Stroke.Color = Color3.fromRGB(40, 60, 40)
     Stroke.Thickness = 1
-    Stroke.Transparency = 0.4
+    Stroke.Transparency = 0.4    
     local TopBar = Instance.new("Frame", MainFrame)
     TopBar.Size = UDim2.new(1, 0, 0, 38)
-    TopBar.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-    Instance.new("UICorner", TopBar).CornerRadius = UDim.new(0, 12)
+    TopBar.BackgroundColor3 = Color3.fromRGB(35, 50, 35)
+    Instance.new("UICorner", TopBar).CornerRadius = UDim.new(0, 12)   
     local Grad = Instance.new("UIGradient", TopBar)
     Grad.Color = ColorSequence.new({
-        ColorSequenceKeypoint.new(0, Color3.fromRGB(45,45,45)),
-        ColorSequenceKeypoint.new(1, Color3.fromRGB(25,25,25)),
-    })
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(45, 65, 45)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(30, 45, 30)),
+    })    
     local Title = Instance.new("TextLabel", TopBar)
     Title.Text = title or "Modern UI"
     Title.TextColor3 = Color3.new(1, 1, 1)
@@ -40,128 +46,183 @@ function UILibrary:CreateWindow(title, size)
     Title.Position = UDim2.new(0, 15, 0, 0)
     Title.Size = UDim2.new(1, -60, 1, 0)
     Title.TextSize = 15
-    Title.TextXAlignment = Enum.TextXAlignment.Left
-    local Close = Instance.new("TextButton", TopBar)
-    Close.Size = UDim2.new(0, 34, 1, -8)
-    Close.Position = UDim2.new(1, -40, 0, 4)
-    Close.BackgroundColor3 = Color3.fromRGB(180, 40, 40)
-    Close.Text = "X"
-    Close.TextColor3 = Color3.fromRGB(255,255,255)
-    Close.Font = Enum.Font.GothamBold
-    Close.TextSize = 14
-    Close.BorderSizePixel = 0
-    Instance.new("UICorner", Close).CornerRadius = UDim.new(0, 10)
-    Close.MouseButton1Click:Connect(function()
-        ScreenGui:Destroy()
-    end)
+    Title.TextXAlignment = Enum.TextXAlignment.Left   
+    local HideBtn = Instance.new("ImageButton", TopBar)
+    HideBtn.Size = UDim2.new(0, 34, 1, -8)
+    HideBtn.Position = UDim2.new(1, -40, 0, 4)
+    HideBtn.BackgroundColor3 = Color3.fromRGB(50, 80, 50)
+    HideBtn.Image = "rbxassetid://3926305904"
+    HideBtn.ImageRectOffset = Vector2.new(884, 284) 
+    HideBtn.ImageRectSize = Vector2.new(36, 36)
+    HideBtn.ImageColor3 = Color3.fromRGB(220, 255, 220)
+    HideBtn.AutoButtonColor = false
+    Instance.new("UICorner", HideBtn).CornerRadius = UDim.new(0, 8)   
+    HideBtn.MouseEnter:Connect(function()
+        HideBtn.BackgroundColor3 = Color3.fromRGB(60, 100, 60)
+    end)  
+    HideBtn.MouseLeave:Connect(function()
+        HideBtn.BackgroundColor3 = Color3.fromRGB(50, 80, 50)
+    end)    
+    HideBtn.MouseButton1Down:Connect(function()
+        HideBtn.BackgroundColor3 = Color3.fromRGB(40, 70, 40)
+    end)  
+    HideBtn.MouseButton1Up:Connect(function()
+        HideBtn.BackgroundColor3 = Color3.fromRGB(60, 100, 60)
+    end)   
     local Container = Instance.new("Frame", MainFrame)
     Container.BackgroundTransparency = 1
     Container.Position = UDim2.new(0, 0, 0, 40)
-    Container.Size = UDim2.new(1, 0, 1, -45)
+    Container.Size = UDim2.new(1, 0, 1, -45)   
     local Layout = Instance.new("UIListLayout", Container)
     Layout.Padding = UDim.new(0, 10)
     Layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
-    Layout.SortOrder = Enum.SortOrder.LayoutOrder
+    Layout.SortOrder = Enum.SortOrder.LayoutOrder  
     local Pad = Instance.new("UIPadding", Container)
     Pad.PaddingTop = UDim.new(0, 10)
     Pad.PaddingLeft = UDim.new(0, 10)
-    Pad.PaddingRight = UDim.new(0, 10)
-    local Window = {}
+    Pad.PaddingRight = UDim.new(0, 10)   
+    local Hidden = false    
+    local function ToggleUI()
+        Hidden = not Hidden     
+        if Hidden then
+            TweenService:Create(MainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quad), {
+                Position = UDim2.new(MainFrame.Position.X.Scale, MainFrame.Position.X.Offset,
+                                     MainFrame.Position.Y.Scale - 0.06, MainFrame.Position.Y.Offset),
+                BackgroundTransparency = 0.4
+            }):Play()            
+            TweenService:Create(Overlay, TweenInfo.new(0.25), {
+                BackgroundTransparency = 1
+            }):Play()            
+            HideBtn.ImageRectOffset = Vector2.new(4, 284)
+        else
+            TweenService:Create(MainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quad), {
+                Position = UDim2.new(MainFrame.Position.X.Scale, MainFrame.Position.X.Offset,
+                                     MainFrame.Position.Y.Scale + 0.06, MainFrame.Position.Y.Offset),
+                BackgroundTransparency = 0
+            }):Play()          
+            TweenService:Create(Overlay, TweenInfo.new(0.25), {
+                BackgroundTransparency = 0.65
+            }):Play()          
+            HideBtn.ImageRectOffset = Vector2.new(884, 284)
+        end
+    end  
+    HideBtn.MouseButton1Click:Connect(ToggleUI)   
+    local Window = {}    
     function Window:CreateButton(text, callback)
         local Btn = Instance.new("TextButton", Container)
         Btn.Size = UDim2.new(1, -20, 0, 38)
-        Btn.BackgroundColor3 = Color3.fromRGB(45,45,45)
+        Btn.BackgroundColor3 = Color3.fromRGB(40, 60, 40) 
         Btn.Text = text
-        Btn.TextColor3 = Color3.fromRGB(255,255,255)
+        Btn.TextColor3 = Color3.fromRGB(240, 255, 240)
         Btn.Font = Enum.Font.GothamSemibold
         Btn.TextSize = 14
         Btn.AutoButtonColor = false
-        Instance.new("UICorner", Btn).CornerRadius = UDim.new(0, 8)
+        Instance.new("UICorner", Btn).CornerRadius = UDim.new(0, 8)        
+        local BtnStroke = Instance.new("UIStroke", Btn)
+        BtnStroke.Color = Color3.fromRGB(60, 90, 60)
+        BtnStroke.Thickness = 1
+        BtnStroke.Transparency = 0.3      
         Btn.MouseEnter:Connect(function()
-            Btn.BackgroundColor3 = Color3.fromRGB(60,60,60)
-        end)
+            Btn.BackgroundColor3 = Color3.fromRGB(50, 80, 50)
+            BtnStroke.Color = Color3.fromRGB(70, 110, 70)
+        end)        
         Btn.MouseLeave:Connect(function()
-            Btn.BackgroundColor3 = Color3.fromRGB(45,45,45)
-        end)
+            Btn.BackgroundColor3 = Color3.fromRGB(40, 60, 40)
+            BtnStroke.Color = Color3.fromRGB(60, 90, 60)
+        end)        
+        Btn.MouseButton1Down:Connect(function()
+            Btn.BackgroundColor3 = Color3.fromRGB(35, 55, 35)
+        end)       
+        Btn.MouseButton1Up:Connect(function()
+            Btn.BackgroundColor3 = Color3.fromRGB(50, 80, 50)
+        end)      
         Btn.MouseButton1Click:Connect(callback)
         return Btn
     end
     function Window:CreateToggle(text, callback, default)
         local ToggleBtn = Instance.new("Frame", Container)
         ToggleBtn.Size = UDim2.new(1, -20, 0, 40)
-        ToggleBtn.BackgroundColor3 = Color3.fromRGB(40,40,40)
-        Instance.new("UICorner", ToggleBtn).CornerRadius = UDim.new(0, 10)
+        ToggleBtn.BackgroundColor3 = Color3.fromRGB(35, 50, 35)
+        Instance.new("UICorner", ToggleBtn).CornerRadius = UDim.new(0, 10)       
         local Stroke = Instance.new("UIStroke", ToggleBtn)
-        Stroke.Color = Color3.fromRGB(60,60,60)
-        Stroke.Thickness = 1
-        Stroke.Transparency = 0.8
+        Stroke.Color = Color3.fromRGB(50, 80, 50) 
+        Stroke.Thickness = 1.6
+        Stroke.Transparency = 0.3     
         local Label = Instance.new("TextLabel", ToggleBtn)
         Label.Size = UDim2.new(0.7, 0, 1, 0)
-        Label.Position = UDim2.new(0, 10, 0, 0)
+        Label.Position = UDim2.new(0, 14, 0, 0)
         Label.BackgroundTransparency = 1
         Label.Font = Enum.Font.GothamSemibold
         Label.TextSize = 14
-        Label.TextColor3 = Color3.fromRGB(220,220,220)
+        Label.TextColor3 = Color3.fromRGB(240, 255, 240)
         Label.TextXAlignment = Enum.TextXAlignment.Left
-        Label.Text = text
+        Label.Text = text      
         local SwitchBg = Instance.new("Frame", ToggleBtn)
-        SwitchBg.Size = UDim2.new(0, 50, 0, 26)
-        SwitchBg.Position = UDim2.new(1, -60, 0.5, -13)
-        SwitchBg.BackgroundColor3 = Color3.fromRGB(70,70,70)
+        SwitchBg.Size = UDim2.new(0, 52, 0, 26)
+        SwitchBg.Position = UDim2.new(1, -64, 0.5, -13)
+        SwitchBg.BackgroundColor3 = Color3.fromRGB(55, 75, 55) 
         SwitchBg.BorderSizePixel = 0
-        Instance.new("UICorner", SwitchBg).CornerRadius = UDim.new(0, 12)
+        Instance.new("UICorner", SwitchBg).CornerRadius = UDim.new(1, 0)      
         local Knob = Instance.new("Frame", SwitchBg)
-        Knob.Size = UDim2.new(0, 22, 0, 22)
-        Knob.Position = UDim2.new(0, 2, 0.5, -11)
-        Knob.BackgroundColor3 = Color3.fromRGB(120,120,120)
+        Knob.Size = UDim2.new(0, 24, 0, 24)
+        Knob.Position = UDim2.new(0, 2, 0.5, -12)
+        Knob.BackgroundColor3 = Color3.fromRGB(120, 120, 120)
         Knob.BorderSizePixel = 0
-        Instance.new("UICorner", Knob).CornerRadius = UDim.new(1, 0)
+        Instance.new("UICorner", Knob).CornerRadius = UDim.new(1, 0)      
         local Check = Instance.new("TextLabel", Knob)
         Check.Size = UDim2.new(1, 0, 1, 0)
         Check.BackgroundTransparency = 1
         Check.Text = "✔"
         Check.Font = Enum.Font.GothamBold
         Check.TextSize = 16
-        Check.TextColor3 = Color3.fromRGB(255,255,255)
-        Check.Visible = false
+        Check.TextColor3 = Color3.fromRGB(255, 255, 255)
+        Check.Visible = false        
         local Hit = Instance.new("TextButton", ToggleBtn)
         Hit.Size = UDim2.new(1, 0, 1, 0)
         Hit.BackgroundTransparency = 1
         Hit.Text = ""
-        Hit.ZIndex = 10
-        local state = default or false
+        Hit.ZIndex = 10      
+        local state = default or false      
         local function ApplyState(on, instant)
             state = on
             if on then
-                local pos = UDim2.new(1, -24, 0.5, -11)
-                if instant then Knob.Position = pos else Knob:TweenPosition(pos, "Out", "Quad", 0.16, true) end
-                Knob.BackgroundColor3 = Color3.fromRGB(30,130,220)
-                SwitchBg.BackgroundColor3 = Color3.fromRGB(30,100,200)
+                local pos = UDim2.new(1, -26, 0.5, -12)
+                if instant then 
+                    Knob.Position = pos 
+                else 
+                    Knob:TweenPosition(pos, "Out", "Quad", 0.18, true) 
+                end
+                Knob.BackgroundColor3 = Color3.fromRGB(60, 200, 90)
+                SwitchBg.BackgroundColor3 = Color3.fromRGB(40, 140, 70)
                 Check.Visible = true
             else
-                local pos = UDim2.new(0, 2, 0.5, -11)
-                if instant then Knob.Position = pos else Knob:TweenPosition(pos, "Out", "Quad", 0.16, true) end
-                Knob.BackgroundColor3 = Color3.fromRGB(120,120,120)
-                SwitchBg.BackgroundColor3 = Color3.fromRGB(70,70,70)
+                local pos = UDim2.new(0, 2, 0.5, -12)
+                if instant then 
+                    Knob.Position = pos 
+                else 
+                    Knob:TweenPosition(pos, "Out", "Quad", 0.18, true) 
+                end
+                Knob.BackgroundColor3 = Color3.fromRGB(120, 120, 120)
+                SwitchBg.BackgroundColor3 = Color3.fromRGB(55, 75, 55)
                 Check.Visible = false
             end
-        end
-        ApplyState(state, true)
+        end       
+        ApplyState(state, true)     
         Hit.MouseButton1Click:Connect(function()
-            ApplyState(not state, false)
+            ApplyState(not state)
             if callback then
                 pcall(function() callback(state) end)
             end
-        end)
+        end)       
         return ToggleBtn
-    end
+    end   
     function Window:CreateLabel(text)
         local Label = Instance.new("TextLabel", Container)
         Label.Size = UDim2.new(1, -20, 0, 26)
         Label.BackgroundTransparency = 1
         Label.Font = Enum.Font.GothamMedium
         Label.TextSize = 14
-        Label.TextColor3 = Color3.fromRGB(200,200,200)
+        Label.TextColor3 = Color3.fromRGB(200, 220, 200) 
         Label.TextXAlignment = Enum.TextXAlignment.Left
         Label.Text = text
         return Label
