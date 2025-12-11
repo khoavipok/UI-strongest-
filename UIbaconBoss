@@ -128,7 +128,9 @@ function UILibrary:CreateWindow(title, size)
     -- Biến trạng thái
     local Hidden = false
     
-    -- ⭐ DRAGGING CROSS-PLATFORM (PC + MOBILE) - TÍCH HỢP
+    -- ========================
+    -- ⭐ DRAGGING CROSS-PLATFORM HOÀN CHỈNH
+    -- ========================
     local dragging = false
     local dragStart
     local startPos
@@ -136,69 +138,48 @@ function UILibrary:CreateWindow(title, size)
     local function update(input)
         local delta = input.Position - dragStart
         MainFrame.Position = UDim2.new(
-            startPos.X.Scale, startPos.X.Offset + delta.X,
-            startPos.Y.Scale, startPos.Y.Offset + delta.Y
+            startPos.X.Scale,
+            startPos.X.Offset + delta.X,
+            startPos.Y.Scale,
+            startPos.Y.Offset + delta.Y
         )
     end
     
-    -- Bắt đầu nhấn vào TopBar hoặc MainFrame để kéo
-    local function dragBegin(input)
-        -- Chỉ kéo khi nhấn vào khoảng trống, không phải nút
-        local target = input.Target
-        if target:IsA("TextButton") or target:IsA("TextLabel") then
-            return -- Không kéo nếu nhấn vào nút hoặc label
-        end
-        
-        if input.UserInputType == Enum.UserInputType.MouseButton1 
-            or input.UserInputType == Enum.UserInputType.Touch then
-            
+    TopBar.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1
+           or input.UserInputType == Enum.UserInputType.Touch then
+    
+            -- Chặn kéo nếu nhấn vào ToggleBtn
+            local pos = input.Position
+            local btnPos = ToggleBtn.AbsolutePosition
+            local btnSize = ToggleBtn.AbsoluteSize
+    
+            if pos.X >= btnPos.X and pos.X <= btnPos.X + btnSize.X
+               and pos.Y >= btnPos.Y and pos.Y <= btnPos.Y + btnSize.Y then
+                return  -- click vào button → không kéo
+            end
+    
             dragging = true
-            dragStart = input.Position
+            dragStart = pos
             startPos = MainFrame.Position
-
-            -- Kết nối sự kiện thả chuột/ngón tay
-            local connection
-            connection = input.Changed:Connect(function()
+    
+            input.Changed:Connect(function()
                 if input.UserInputState == Enum.UserInputState.End then
                     dragging = false
-                    if connection then
-                        connection:Disconnect()
-                    end
                 end
             end)
         end
-    end
+    end)
     
-    -- Kéo theo di chuyển ngón tay/chuột
     UserInputService.InputChanged:Connect(function(input)
         if dragging then
-            if input.UserInputType == Enum.UserInputType.MouseMovement 
+            if input.UserInputType == Enum.UserInputType.MouseMovement
                or input.UserInputType == Enum.UserInputType.Touch then
                 update(input)
             end
         end
     end)
-    
-    -- Áp dụng cho MainFrame và TopBar
-    MainFrame.InputBegan:Connect(dragBegin)
-    TopBar.InputBegan:Connect(dragBegin)
-    
-    -- Ngăn không cho kéo từ nút toggle
-    ToggleBtn.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 
-            or input.UserInputType == Enum.UserInputType.Touch then
-            
-            -- Chặn sự kiện kéo từ nút
-            local connection
-            connection = input.Changed:Connect(function()
-                if input.UserInputState == Enum.UserInputState.End then
-                    if connection then
-                        connection:Disconnect()
-                    end
-                end
-            end)
-        end
-    end)
+    -- ========================
     
     -- 🔧 TOGGLE ẨN/HIỆN UI
     local function ToggleUI()
@@ -263,7 +244,7 @@ function UILibrary:CreateWindow(title, size)
         return Container
     end
     
-    -- 🟢 BUTTON - THÊM NGĂN KÉO
+    -- 🟢 BUTTON
     function Window:CreateButton(text, callback)
         local Btn = Instance.new("TextButton", Container)
         Btn.Size = UDim2.new(1, -20, 0, 40)
@@ -285,22 +266,6 @@ function UILibrary:CreateWindow(title, size)
         BtnStroke.Color = Color3.fromRGB(60, 90, 60)
         BtnStroke.Thickness = 1.5
         
-        -- Ngăn không cho kéo từ nút
-        Btn.InputBegan:Connect(function(input)
-            if input.UserInputType == Enum.UserInputType.MouseButton1 
-                or input.UserInputType == Enum.UserInputType.Touch then
-                
-                local connection
-                connection = input.Changed:Connect(function()
-                    if input.UserInputState == Enum.UserInputState.End then
-                        if connection then
-                            connection:Disconnect()
-                        end
-                    end
-                end)
-            end
-        end)
-        
         Btn.MouseEnter:Connect(function()
             Btn.BackgroundColor3 = Color3.fromRGB(50, 80, 50)
             BtnStroke.Color = Color3.fromRGB(70, 110, 70)
@@ -320,7 +285,7 @@ function UILibrary:CreateWindow(title, size)
         return Btn
     end
     
-    -- 🔘 TOGGLE - THÊM NGĂN KÉO
+    -- 🔘 TOGGLE
     function Window:CreateToggle(text, callback, default)
         local ToggleFrame = Instance.new("Frame", Container)
         ToggleFrame.Size = UDim2.new(1, -20, 0, 40)
@@ -386,22 +351,6 @@ function UILibrary:CreateWindow(title, size)
         HitButton.Active = true
         HitButton.Selectable = true
         HitButton.Name = "ToggleHit_" .. text
-        
-        -- Ngăn không cho kéo từ nút toggle
-        HitButton.InputBegan:Connect(function(input)
-            if input.UserInputType == Enum.UserInputType.MouseButton1 
-                or input.UserInputType == Enum.UserInputType.Touch then
-                
-                local connection
-                connection = input.Changed:Connect(function()
-                    if input.UserInputState == Enum.UserInputState.End then
-                        if connection then
-                            connection:Disconnect()
-                        end
-                    end
-                end)
-            end
-        end)
         
         local state = default or false
         
