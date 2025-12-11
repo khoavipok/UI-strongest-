@@ -32,7 +32,6 @@ function UILibrary:CreateWindow(title, size)
     MainFrame.Name = "MainWindow"
     MainFrame.Active = true
     MainFrame.Selectable = true
-    MainFrame.Draggable = true  -- BẬT TÍNH NĂNG KÉO
     
     local MainCorner = Instance.new("UICorner", MainFrame)
     MainCorner.CornerRadius = UDim.new(0, 12)
@@ -129,23 +128,39 @@ function UILibrary:CreateWindow(title, size)
     -- Biến trạng thái
     local Hidden = false
     
-    -- 🔧 **FIX KÉO UI HOÀN HẢO**
-    -- Biến để theo dõi kéo
-    local isDragging = false
-    local dragStart, frameStart
+    -- ⭐ DRAGGING CROSS-PLATFORM (PC + MOBILE) - TÍCH HỢP
+    local dragging = false
+    local dragStart
+    local startPos
     
-    -- Hàm bắt đầu kéo - HOẠT ĐỘNG VỚI TOÀN BỘ MAINFRAME
-    local function startDragging(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            isDragging = true
-            dragStart = input.Position
-            frameStart = MainFrame.Position
+    local function update(input)
+        local delta = input.Position - dragStart
+        MainFrame.Position = UDim2.new(
+            startPos.X.Scale, startPos.X.Offset + delta.X,
+            startPos.Y.Scale, startPos.Y.Offset + delta.Y
+        )
+    end
+    
+    -- Bắt đầu nhấn vào TopBar hoặc MainFrame để kéo
+    local function dragBegin(input)
+        -- Chỉ kéo khi nhấn vào khoảng trống, không phải nút
+        local target = input.Target
+        if target:IsA("TextButton") or target:IsA("TextLabel") then
+            return -- Không kéo nếu nhấn vào nút hoặc label
+        end
+        
+        if input.UserInputType == Enum.UserInputType.MouseButton1 
+            or input.UserInputType == Enum.UserInputType.Touch then
             
-            -- Kết nối sự kiện thay đổi input
+            dragging = true
+            dragStart = input.Position
+            startPos = MainFrame.Position
+
+            -- Kết nối sự kiện thả chuột/ngón tay
             local connection
             connection = input.Changed:Connect(function()
                 if input.UserInputState == Enum.UserInputState.End then
-                    isDragging = false
+                    dragging = false
                     if connection then
                         connection:Disconnect()
                     end
@@ -154,31 +169,26 @@ function UILibrary:CreateWindow(title, size)
         end
     end
     
-    -- Kết nối sự kiện kéo cho MainFrame
-    MainFrame.InputBegan:Connect(startDragging)
-    
-    -- Kết nối sự kiện kéo cho TopBar (phòng trường hợp)
-    TopBar.InputBegan:Connect(startDragging)
-    
-    -- Xử lý di chuyển khi kéo
+    -- Kéo theo di chuyển ngón tay/chuột
     UserInputService.InputChanged:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseMovement then
-            if isDragging then
-                local delta = input.Position - dragStart
-                MainFrame.Position = UDim2.new(
-                    frameStart.X.Scale, 
-                    frameStart.X.Offset + delta.X,
-                    frameStart.Y.Scale,
-                    frameStart.Y.Offset + delta.Y
-                )
+        if dragging then
+            if input.UserInputType == Enum.UserInputType.MouseMovement 
+               or input.UserInputType == Enum.UserInputType.Touch then
+                update(input)
             end
         end
     end)
     
-    -- NGĂN CHẶN KÉO TỪ CÁC NÚT BÊN TRONG
+    -- Áp dụng cho MainFrame và TopBar
+    MainFrame.InputBegan:Connect(dragBegin)
+    TopBar.InputBegan:Connect(dragBegin)
+    
+    -- Ngăn không cho kéo từ nút toggle
     ToggleBtn.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            -- Ngăn không cho kéo từ nút toggle
+        if input.UserInputType == Enum.UserInputType.MouseButton1 
+            or input.UserInputType == Enum.UserInputType.Touch then
+            
+            -- Chặn sự kiện kéo từ nút
             local connection
             connection = input.Changed:Connect(function()
                 if input.UserInputState == Enum.UserInputState.End then
@@ -266,6 +276,7 @@ function UILibrary:CreateWindow(title, size)
         Btn.ZIndex = 12
         Btn.Active = true
         Btn.Selectable = true
+        Btn.Name = "Button_" .. text
         
         local BtnCorner = Instance.new("UICorner", Btn)
         BtnCorner.CornerRadius = UDim.new(0, 8)
@@ -276,7 +287,9 @@ function UILibrary:CreateWindow(title, size)
         
         -- Ngăn không cho kéo từ nút
         Btn.InputBegan:Connect(function(input)
-            if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            if input.UserInputType == Enum.UserInputType.MouseButton1 
+                or input.UserInputType == Enum.UserInputType.Touch then
+                
                 local connection
                 connection = input.Changed:Connect(function()
                     if input.UserInputState == Enum.UserInputState.End then
@@ -315,6 +328,7 @@ function UILibrary:CreateWindow(title, size)
         ToggleFrame.ZIndex = 12
         ToggleFrame.Active = false
         ToggleFrame.Selectable = false
+        ToggleFrame.Name = "Toggle_" .. text
         
         local ToggleCorner = Instance.new("UICorner", ToggleFrame)
         ToggleCorner.CornerRadius = UDim.new(0, 8)
@@ -371,10 +385,13 @@ function UILibrary:CreateWindow(title, size)
         HitButton.ZIndex = 15
         HitButton.Active = true
         HitButton.Selectable = true
+        HitButton.Name = "ToggleHit_" .. text
         
         -- Ngăn không cho kéo từ nút toggle
         HitButton.InputBegan:Connect(function(input)
-            if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            if input.UserInputType == Enum.UserInputType.MouseButton1 
+                or input.UserInputType == Enum.UserInputType.Touch then
+                
                 local connection
                 connection = input.Changed:Connect(function()
                     if input.UserInputState == Enum.UserInputState.End then
@@ -428,6 +445,7 @@ function UILibrary:CreateWindow(title, size)
         Label.ZIndex = 12
         Label.Active = false
         Label.Selectable = false
+        Label.Name = "Label_" .. text
         
         return Label
     end
