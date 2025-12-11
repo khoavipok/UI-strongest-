@@ -1,6 +1,7 @@
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
 
 local UILibrary = {}
 
@@ -40,7 +41,7 @@ function UILibrary:CreateWindow(title, size)
     Stroke.Thickness = 2
     Stroke.Transparency = 0.3
     
-    -- Top bar - CHỈ KÉO TỪ ĐÂY
+    -- Top bar
     local TopBar = Instance.new("Frame", MainFrame)
     TopBar.Size = UDim2.new(1, 0, 0, 40)
     TopBar.BackgroundColor3 = Color3.fromRGB(35, 50, 35)
@@ -102,7 +103,7 @@ function UILibrary:CreateWindow(title, size)
     
     -- Container bên trong ScrollFrame
     local Container = Instance.new("Frame", ScrollFrame)
-    Container.Size = UDim2.new(1, 0, 0, 0) -- Height sẽ tự động điều chỉnh
+    Container.Size = UDim2.new(1, 0, 0, 0)
     Container.BackgroundTransparency = 1
     Container.ZIndex = 11
     Container.Name = "ContentContainer"
@@ -129,8 +130,8 @@ function UILibrary:CreateWindow(title, size)
     local isDragging = false
     local dragStart, frameStart
     
-    -- 🔧 CHỈ KÉO TỪ TOP BAR
-    TopBar.InputBegan:Connect(function(input)
+    -- 🔧 **FIX 1: KÉO ĐƯỢC TỪ BẤT KỲ ĐÂU TRÊN UI**
+    MainFrame.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 then
             isDragging = true
             dragStart = input.Position
@@ -146,7 +147,7 @@ function UILibrary:CreateWindow(title, size)
         end
     end)
     
-    game:GetService("UserInputService").InputChanged:Connect(function(input)
+    UserInputService.InputChanged:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseMovement and isDragging then
             local delta = input.Position - dragStart
             MainFrame.Position = UDim2.new(
@@ -158,37 +159,40 @@ function UILibrary:CreateWindow(title, size)
         end
     end)
     
-    -- 🔧 TOGGLE ẨN/HIỆN UI
+    -- 🔧 **FIX 2: TOGGLE ẨN/HIỆN ĐÚNG - ẨN HẾT**
     local function ToggleUI()
         Hidden = not Hidden
         
         if Hidden then
-            -- Ẩn container (chỉ còn lại top bar)
+            -- Ẩn HOÀN TOÀN: content + overlay
             ScrollFrame.Visible = false
-            MainFrame.Size = UDim2.new(MainFrame.Size.X, MainFrame.Size.Y, 0, 45)
+            Overlay.Visible = false  -- Ẩn overlay đen
+            
+            -- Thu nhỏ chỉ còn TopBar
+            MainFrame:TweenSize(UDim2.new(MainFrame.Size.X.Scale, MainFrame.Size.X.Offset, 0, 40), 
+                               "Out", "Quad", 0.3, true)
+            
+            -- Đẩy lên trên cùng
+            local currentPos = MainFrame.Position
+            local targetY = math.max(5, currentPos.Y.Offset)  -- Đảm bảo không ra khỏi màn hình
+            MainFrame:TweenPosition(UDim2.new(currentPos.X.Scale, currentPos.X.Offset, 0, targetY), 
+                                   "Out", "Quad", 0.3, true)
+            
             ToggleBtn.Text = "+"
-            
-            -- Đẩy lên trên nếu cần
-            local currentPos = MainFrame.Position
-            if currentPos.Y.Offset + 45 > 0 then
-                MainFrame.Position = UDim2.new(
-                    currentPos.X.Scale,
-                    currentPos.X.Offset,
-                    0,
-                    5
-                )
-            end
         else
-            -- Hiện container
+            -- Hiện lại TẤT CẢ
+            Overlay.Visible = true  -- Hiện overlay đen
             ScrollFrame.Visible = true
-            MainFrame.Size = size or UDim2.new(0, 520, 0, 340)
-            ToggleBtn.Text = "-"
             
-            -- Kéo về giữa nếu cần
-            local currentPos = MainFrame.Position
-            if currentPos.Y.Scale < 0.1 then
-                MainFrame.Position = UDim2.new(0.5, -260, 0.5, -170)
-            end
+            -- Trở về kích thước ban đầu
+            MainFrame:TweenSize(size or UDim2.new(0, 520, 0, 340), 
+                               "Out", "Quad", 0.3, true)
+            
+            -- Kéo về giữa màn hình
+            MainFrame:TweenPosition(UDim2.new(0.5, -260, 0.5, -170), 
+                                   "Out", "Quad", 0.3, true)
+            
+            ToggleBtn.Text = "-"
         end
     end
     
@@ -258,7 +262,7 @@ function UILibrary:CreateWindow(title, size)
         return Btn
     end
     
-    -- 🔘 TOGGLE - FIX KHÔNG KÉO ĐƯỢC
+    -- 🔘 TOGGLE
     function Window:CreateToggle(text, callback, default)
         local ToggleFrame = Instance.new("Frame", Container)
         ToggleFrame.Size = UDim2.new(1, -20, 0, 40)
@@ -314,7 +318,7 @@ function UILibrary:CreateWindow(title, size)
         local KnobCorner = Instance.new("UICorner", Knob)
         KnobCorner.CornerRadius = UDim.new(1, 0)
         
-        -- Nút bấm thực tế - CHỈ CÁI NÀY ACTIVE
+        -- Nút bấm thực tế
         local HitButton = Instance.new("TextButton", ToggleFrame)
         HitButton.Size = UDim2.new(1, 0, 1, 0)
         HitButton.BackgroundTransparency = 1
