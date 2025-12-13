@@ -1,0 +1,259 @@
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local LocalPlayer = Players.LocalPlayer
+local Camera = workspace.CurrentCamera
+local UILibrary = loadstring(game:HttpGet("https://raw.githubusercontent.com/khoavipok/UI-strongest-/refs/heads/main/UIbaconBoss"))()
+local Window = UILibrary:CreateWindow("✨ Bacon Boss", UDim2.new(0, 250, 0, 350))
+local SelectedPlayer = nil
+local Locked = false
+local FollowDistance = 3.5
+local HeightOffset = 1.8
+local PredictPower = 5
+local ESPFolder = Instance.new("Folder", game.CoreGui)
+ESPFolder.Name = "BehindLockESP"
+local CurrentHighlight
+local function highlight(plr)
+    if CurrentHighlight then 
+        CurrentHighlight:Destroy() 
+        CurrentHighlight = nil
+    end
+    if not (plr and plr.Character) then return end
+    local h = Instance.new("Highlight")
+    h.FillColor = Color3.fromRGB(255, 80, 80)
+    h.FillTransparency = 0.45
+    h.OutlineColor = Color3.new(1, 1, 1)
+    h.OutlineTransparency = 0
+    h.Adornee = plr.Character
+    h.Parent = ESPFolder
+    CurrentHighlight = h
+end
+local Info = Window:CreateLabel("Selected: None")
+local State = Window:CreateLabel("State: Idle")
+task.wait(0.1)
+local Container = Window:GetContainer()
+if Container then
+    local Scroll = Instance.new("ScrollingFrame")
+    Scroll.Name = "PlayerScroll"
+    Scroll.Size = UDim2.new(1, -20, 0, 160)
+    Scroll.CanvasSize = UDim2.new(0, 0, 0, 0)
+    Scroll.ScrollBarThickness = 6
+    Scroll.BackgroundColor3 = Color3.fromRGB(35, 50, 35)
+    Scroll.BackgroundTransparency = 0.2
+    Scroll.BorderSizePixel = 0
+    Scroll.Parent = Container
+    local Corner = Instance.new("UICorner", Scroll)
+    Corner.CornerRadius = UDim.new(0, 8)    
+    local Stroke = Instance.new("UIStroke", Scroll)
+    Stroke.Color = Color3.fromRGB(50, 80, 50)
+    Stroke.Thickness = 1
+    Stroke.Transparency = 0.3   
+    local Layout = Instance.new("UIListLayout", Scroll)
+    Layout.Padding = UDim.new(0, 5)
+    Layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+    Layout.SortOrder = Enum.SortOrder.LayoutOrder    
+    local Pad = Instance.new("UIPadding", Scroll)
+    Pad.PaddingTop = UDim.new(0, 5)
+    Pad.PaddingLeft = UDim.new(0, 5)
+    Pad.PaddingRight = UDim.new(0, 5)
+    Pad.PaddingBottom = UDim.new(0, 5)    
+    local function UpdateCanvas()
+        Scroll.CanvasSize = UDim2.new(0, 0, 0, Layout.AbsoluteContentSize.Y + 10)
+    end 
+    Layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(UpdateCanvas) 
+    local function RefreshList()
+        for _, v in pairs(Scroll:GetChildren()) do
+            if v:IsA("TextButton") then 
+                v:Destroy() 
+            end
+        end        
+        for _, plr in ipairs(Players:GetPlayers()) do
+            if plr ~= LocalPlayer then
+                local B = Instance.new("TextButton")
+                B.Parent = Scroll
+                B.Size = UDim2.new(1, -10, 0, 28)
+                B.BackgroundColor3 = Color3.fromRGB(50, 70, 50)
+                B.TextColor3 = Color3.fromRGB(240, 255, 240)
+                B.Text = plr.Name
+                B.Font = Enum.Font.GothamSemibold
+                B.TextSize = 13
+                B.AutoButtonColor = false               
+                local Corner = Instance.new("UICorner", B)
+                Corner.CornerRadius = UDim.new(0, 6)               
+                local Stroke = Instance.new("UIStroke", B)
+                Stroke.Color = Color3.fromRGB(70, 100, 70)
+                Stroke.Thickness = 1
+                Stroke.Transparency = 0.3                
+                B.MouseEnter:Connect(function()
+                    B.BackgroundColor3 = Color3.fromRGB(60, 90, 60)
+                    Stroke.Color = Color3.fromRGB(80, 120, 80)
+                end)                
+                B.MouseLeave:Connect(function()
+                    B.BackgroundColor3 = Color3.fromRGB(50, 70, 50)
+                    Stroke.Color = Color3.fromRGB(70, 100, 70)
+                end)                
+                B.MouseButton1Click:Connect(function()
+                    SelectedPlayer = plr
+                    Info.Text = "Selected: " .. plr.Name
+                    highlight(plr)
+                end)
+            end
+        end
+        UpdateCanvas()
+    end
+    Window:CreateButton("🔁 Refresh List", RefreshList)
+    Window:CreateToggle("Behind Lock", function(v)
+        Locked = v
+        State.Text = v and "State: LOCKED" or "State: Idle"
+        if not v then
+            Camera.CameraType = Enum.CameraType.Custom
+            if CurrentHighlight then
+                CurrentHighlight:Destroy()
+                CurrentHighlight = nil
+            end
+        else
+            if SelectedPlayer then
+                highlight(SelectedPlayer)
+            end
+        end
+    end)
+    task.spawn(function()
+        task.wait(0.2)
+        RefreshList()
+    end)
+end
+RunService.Heartbeat:Connect(function(dt)
+    if not Locked or not SelectedPlayer then return end   
+    local target = SelectedPlayer.Character
+    local me = LocalPlayer.Character
+    if not target or not me then return end  
+    local tHRP = target:FindFirstChild("HumanoidRootPart")
+    local mHRP = me:FindFirstChild("HumanoidRootPart")
+    if not tHRP or not mHRP then return end   
+    local predicted = tHRP.Position + (tHRP.AssemblyLinearVelocity * dt * PredictPower)
+    local behindPos = predicted - (tHRP.CFrame.LookVector * FollowDistance) + Vector3.new(0, HeightOffset, 0)
+    mHRP.CFrame = CFrame.new(mHRP.Position:Lerp(behindPos, 0.6), predicted)
+    local camTarget = CFrame.lookAt(
+        mHRP.Position + Vector3.new(13, 5, 3),
+        predicted + Vector3.new(0, 1.8, 0)
+    )    
+    Camera.CameraType = Enum.CameraType.Scriptable
+    Camera.CFrame = Camera.CFrame:Lerp(camTarget, 0.15)
+end)
+local TOOL_NAME = "Death Counter"
+local function showLoadingScreen(seconds)
+    local screenGui = Instance.new("ScreenGui")
+    screenGui.Name = "DeathCounterLoading"
+    screenGui.ResetOnSpawn = false
+    screenGui.IgnoreGuiInset = true
+    screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    screenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")   
+    local frame = Instance.new("Frame")
+    frame.Size = UDim2.new(1, 0, 1, 0)
+    frame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    frame.BackgroundTransparency = 0.4
+    frame.Parent = screenGui   
+    local label = Instance.new("TextLabel")
+    label.AnchorPoint = Vector2.new(0.5, 0.5)
+    label.Position = UDim2.new(0.5, 0, 0.5, 0)
+    label.Size = UDim2.new(0.8, 0, 0.1, 0)
+    label.BackgroundTransparency = 1
+    label.TextColor3 = Color3.fromRGB(255, 255, 255)
+    label.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+    label.TextStrokeTransparency = 0
+    label.TextScaled = true
+    label.Font = Enum.Font.GothamBold
+    label.Text = "🔍 Đang kiểm tra người chơi... (" .. seconds .. "s)"
+    label.Parent = frame    
+    for i = seconds - 1, 0, -1 do
+        task.wait(1)
+        label.Text = "🔍 Đang kiểm tra người chơi... (" .. i .. "s)"
+    end   
+    screenGui:Destroy()
+end
+local function showESP(player, text, color)
+    local char = player.Character
+    if not char then return end    
+    local head = char:FindFirstChild("Head")
+    if not head then return end
+    if head:FindFirstChild("DeathESP") then
+        head.DeathESP:Destroy()
+    end   
+    local billboard = Instance.new("BillboardGui")
+    billboard.Name = "DeathESP"
+    billboard.Adornee = head
+    billboard.Size = UDim2.new(0, 200, 0, 50)
+    billboard.StudsOffset = Vector3.new(0, 3, 0)
+    billboard.AlwaysOnTop = true
+    billboard.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    billboard.MaxDistance = 150
+    billboard.Enabled = true    
+    local label = Instance.new("TextLabel")
+    label.Size = UDim2.new(1, 0, 1, 0)
+    label.BackgroundTransparency = 1
+    label.Text = text
+    label.TextColor3 = color
+    label.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+    label.TextStrokeTransparency = 0
+    label.TextScaled = true
+    label.Font = Enum.Font.GothamBold
+    label.Parent = billboard    
+    billboard.Parent = head    
+    task.delay(10, function()
+        if billboard and billboard.Parent then
+            billboard:Destroy()
+        end
+    end)
+end
+local function trackPlayer(player)
+    task.spawn(function()
+        local lastState = nil
+        while player and player.Parent do
+            local hasTool = false
+            local backpack = player:FindFirstChild("Backpack")
+            local character = player.Character            
+            if backpack and backpack:FindFirstChild(TOOL_NAME) then
+                hasTool = true
+            elseif character and character:FindFirstChild(TOOL_NAME) then
+                hasTool = true
+            end            
+            if hasTool ~= lastState then
+                lastState = hasTool
+                if hasTool then
+                    showESP(player, "🟢 CHƯA BẬT DEATH COUNTER", Color3.fromRGB(0, 255, 0))
+                else
+                    showESP(player, "🔴 ĐÃ BẬT DEATH COUNTER", Color3.fromRGB(255, 0, 0))
+                end
+            end
+            
+            task.wait(1.5)
+        end
+    end)
+end
+task.spawn(function()
+    showLoadingScreen(5)
+end)
+task.wait(2)
+for _, plr in pairs(Players:GetPlayers()) do
+    if plr ~= LocalPlayer then
+        trackPlayer(plr)
+    end
+end
+Players.PlayerAdded:Connect(function(plr)
+    if plr ~= LocalPlayer then
+        trackPlayer(plr)
+    end
+end)
+Players.PlayerRemoving:Connect(function(plr)
+    if plr == SelectedPlayer then
+        SelectedPlayer = nil
+        Info.Text = "Selected: None"
+        State.Text = "State: Idle"
+        if CurrentHighlight then
+            CurrentHighlight:Destroy()
+            CurrentHighlight = nil
+        end
+    end
+end)
+task.wait(0.3)
+Window:CreateLabel("khanhlyHUB")
+
