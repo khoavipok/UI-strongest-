@@ -55,7 +55,7 @@ function UILibrary:CreateWindow(title, size)
     
     -- Title
     local Title = Instance.new("TextLabel", TopBar)
-    Title.Text = title or "✨ Bacon Boss"
+    Title.Text = title or "✨ khanhlyHUB"
     Title.TextColor3 = Color3.fromRGB(240, 255, 240)
     Title.BackgroundTransparency = 1
     Title.Font = Enum.Font.GothamBold
