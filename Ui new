@@ -5,19 +5,17 @@ local UserInputService = game:GetService("UserInputService")
 
 local UILibrary = {}
 
--- 🎨 RED BLACK THEME
-local THEME = {
-    BG_BLACK  = Color3.fromRGB(14,14,14),
-    BG_DARK   = Color3.fromRGB(22,22,22),
+-- 🔴🖤 RED BLACK COLOR ONLY (SAFE)
+local C_BG_MAIN   = Color3.fromRGB(14,14,14)
+local C_BG_TOP    = Color3.fromRGB(22,22,22)
+local C_BG_ITEM   = Color3.fromRGB(30,30,30)
 
-    RED_MAIN  = Color3.fromRGB(160,35,35),
-    RED_DARK  = Color3.fromRGB(120,25,25),
-    RED_HOVER = Color3.fromRGB(200,55,55),
+local C_RED_MAIN  = Color3.fromRGB(160,35,35)
+local C_RED_DARK  = Color3.fromRGB(120,25,25)
+local C_RED_HOVER = Color3.fromRGB(200,55,55)
 
-    STROKE    = Color3.fromRGB(220,70,70),
-    TEXT      = Color3.fromRGB(255,210,210),
-    TEXT_DIM  = Color3.fromRGB(200,160,160)
-}
+local C_TEXT_MAIN = Color3.fromRGB(255,210,210)
+local C_TEXT_DIM  = Color3.fromRGB(200,170,170)
 
 function UILibrary:CreateWindow(title, size)
     local ScreenGui = Instance.new("ScreenGui", game.CoreGui)
@@ -29,52 +27,53 @@ function UILibrary:CreateWindow(title, size)
     local Overlay = Instance.new("Frame", ScreenGui)
     Overlay.Size = UDim2.new(1,0,1,0)
     Overlay.BackgroundColor3 = Color3.fromRGB(0,0,0)
-    Overlay.BackgroundTransparency = 0.6
+    Overlay.BackgroundTransparency = 0.7
     Overlay.ZIndex = 1
+    Overlay.Visible = true
     
     -- Main window
     local MainFrame = Instance.new("Frame", ScreenGui)
     MainFrame.Size = size or UDim2.new(0,520,0,340)
     MainFrame.Position = UDim2.new(0.5,-260,0.5,-170)
-    MainFrame.BackgroundColor3 = THEME.BG_BLACK
+    MainFrame.BackgroundColor3 = C_BG_MAIN
     MainFrame.ZIndex = 10
     MainFrame.Active = true
     MainFrame.ClipsDescendants = true
     
     Instance.new("UICorner",MainFrame).CornerRadius = UDim.new(0,12)
     local Stroke = Instance.new("UIStroke",MainFrame)
-    Stroke.Color = THEME.RED_DARK
+    Stroke.Color = C_RED_DARK
     Stroke.Thickness = 2
-    Stroke.Transparency = 0.15
+    Stroke.Transparency = 0.3
     
-    -- TopBar
-    local TopBar = Instance.new("Frame",MainFrame)
+    -- Top bar
+    local TopBar = Instance.new("Frame", MainFrame)
     TopBar.Size = UDim2.new(1,0,0,40)
-    TopBar.BackgroundColor3 = THEME.BG_DARK
+    TopBar.BackgroundColor3 = C_BG_TOP
     TopBar.ZIndex = 12
     TopBar.Active = true
     
     Instance.new("UICorner",TopBar).CornerRadius = UDim.new(0,12)
     
     -- Title
-    local Title = Instance.new("TextLabel",TopBar)
+    local Title = Instance.new("TextLabel", TopBar)
     Title.Text = title or "🩸 khanhlyHUB"
-    Title.Font = Enum.Font.GothamBold
-    Title.TextSize = 16
-    Title.TextColor3 = THEME.TEXT
+    Title.TextColor3 = C_TEXT_MAIN
     Title.BackgroundTransparency = 1
+    Title.Font = Enum.Font.GothamBold
     Title.Position = UDim2.new(0,15,0,0)
     Title.Size = UDim2.new(1,-60,1,0)
+    Title.TextSize = 16
     Title.TextXAlignment = Enum.TextXAlignment.Left
     Title.ZIndex = 13
     
-    -- Toggle Button
-    local ToggleBtn = Instance.new("TextButton",TopBar)
+    -- Toggle button
+    local ToggleBtn = Instance.new("TextButton", TopBar)
     ToggleBtn.Size = UDim2.new(0,34,0,34)
     ToggleBtn.Position = UDim2.new(1,-42,0.5,-17)
-    ToggleBtn.BackgroundColor3 = THEME.RED_DARK
+    ToggleBtn.BackgroundColor3 = C_RED_DARK
     ToggleBtn.Text = "-"
-    ToggleBtn.TextColor3 = THEME.TEXT
+    ToggleBtn.TextColor3 = C_TEXT_MAIN
     ToggleBtn.Font = Enum.Font.GothamBold
     ToggleBtn.TextSize = 18
     ToggleBtn.ZIndex = 13
@@ -82,23 +81,25 @@ function UILibrary:CreateWindow(title, size)
     
     Instance.new("UICorner",ToggleBtn).CornerRadius = UDim.new(0,8)
     local ToggleStroke = Instance.new("UIStroke",ToggleBtn)
-    ToggleStroke.Color = THEME.STROKE
+    ToggleStroke.Color = C_RED_MAIN
     ToggleStroke.Thickness = 2
     
-    -- Scroll
-    local ScrollFrame = Instance.new("ScrollingFrame",MainFrame)
+    -- ScrollFrame
+    local ScrollFrame = Instance.new("ScrollingFrame", MainFrame)
     ScrollFrame.Size = UDim2.new(1,0,1,-50)
     ScrollFrame.Position = UDim2.new(0,0,0,45)
     ScrollFrame.BackgroundTransparency = 1
+    ScrollFrame.ZIndex = 11
     ScrollFrame.ScrollBarThickness = 6
-    ScrollFrame.ScrollBarImageColor3 = THEME.RED_MAIN
+    ScrollFrame.ScrollBarImageColor3 = C_RED_MAIN
     ScrollFrame.BorderSizePixel = 0
+    ScrollFrame.CanvasSize = UDim2.new(0,0,0,0)
     
-    local Container = Instance.new("Frame",ScrollFrame)
+    local Container = Instance.new("Frame", ScrollFrame)
     Container.Size = UDim2.new(1,0,0,0)
     Container.BackgroundTransparency = 1
     
-    local Layout = Instance.new("UIListLayout",Container)
+    local Layout = Instance.new("UIListLayout", Container)
     Layout.Padding = UDim.new(0,10)
     Layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
     
@@ -108,8 +109,8 @@ function UILibrary:CreateWindow(title, size)
         Container.Size = UDim2.new(1,0,0,Layout.AbsoluteContentSize.Y)
         ScrollFrame.CanvasSize = UDim2.new(0,0,0,Layout.AbsoluteContentSize.Y + 20)
     end)
-    
-    -- Toggle hide/show
+
+    -- Toggle UI (GIỮ NGUYÊN LOGIC)
     local Hidden = false
     ToggleBtn.MouseButton1Click:Connect(function()
         Hidden = not Hidden
@@ -117,41 +118,48 @@ function UILibrary:CreateWindow(title, size)
         Overlay.Visible = not Hidden
         ToggleBtn.Text = Hidden and "+" or "-"
     end)
-    
+
     ToggleBtn.MouseEnter:Connect(function()
-        ToggleBtn.BackgroundColor3 = THEME.RED_HOVER
+        ToggleBtn.BackgroundColor3 = C_RED_HOVER
     end)
     ToggleBtn.MouseLeave:Connect(function()
-        ToggleBtn.BackgroundColor3 = THEME.RED_DARK
+        ToggleBtn.BackgroundColor3 = C_RED_DARK
     end)
-    
+    ToggleBtn.MouseButton1Down:Connect(function()
+        ToggleBtn.BackgroundColor3 = C_RED_MAIN
+    end)
+    ToggleBtn.MouseButton1Up:Connect(function()
+        ToggleBtn.BackgroundColor3 = C_RED_HOVER
+    end)
+
     local Window = {}
     function Window:GetContainer()
         return Container
     end
-    
-    -- 🔘 BUTTON
+
+    -- Button
     function Window:CreateButton(text, callback)
-        local Btn = Instance.new("TextButton",Container)
+        local Btn = Instance.new("TextButton", Container)
         Btn.Size = UDim2.new(1,-20,0,40)
-        Btn.BackgroundColor3 = THEME.BG_DARK
+        Btn.BackgroundColor3 = C_BG_ITEM
         Btn.Text = text
-        Btn.TextColor3 = THEME.TEXT
+        Btn.TextColor3 = C_TEXT_MAIN
         Btn.Font = Enum.Font.GothamSemibold
         Btn.TextSize = 14
         Btn.AutoButtonColor = false
         
         Instance.new("UICorner",Btn).CornerRadius = UDim.new(0,8)
-        local S = Instance.new("UIStroke",Btn)
-        S.Color = THEME.RED_MAIN
+        local BtnStroke = Instance.new("UIStroke",Btn)
+        BtnStroke.Color = C_RED_MAIN
+        BtnStroke.Thickness = 1.5
         
         Btn.MouseEnter:Connect(function()
-            Btn.BackgroundColor3 = THEME.RED_DARK
-            S.Color = THEME.RED_HOVER
+            Btn.BackgroundColor3 = C_RED_DARK
+            BtnStroke.Color = C_RED_HOVER
         end)
         Btn.MouseLeave:Connect(function()
-            Btn.BackgroundColor3 = THEME.BG_DARK
-            S.Color = THEME.RED_MAIN
+            Btn.BackgroundColor3 = C_BG_ITEM
+            BtnStroke.Color = C_RED_MAIN
         end)
         
         Btn.MouseButton1Click:Connect(function()
@@ -159,76 +167,20 @@ function UILibrary:CreateWindow(title, size)
         end)
         return Btn
     end
-    
-    -- 🔘 TOGGLE
-    function Window:CreateToggle(text, callback, default)
-        local Frame = Instance.new("Frame",Container)
-        Frame.Size = UDim2.new(1,-20,0,40)
-        Frame.BackgroundColor3 = THEME.BG_DARK
-        
-        Instance.new("UICorner",Frame).CornerRadius = UDim.new(0,8)
-        Instance.new("UIStroke",Frame).Color = THEME.RED_MAIN
-        
-        local Label = Instance.new("TextLabel",Frame)
-        Label.Size = UDim2.new(0.7,0,1,0)
-        Label.Position = UDim2.new(0,10,0,0)
-        Label.BackgroundTransparency = 1
-        Label.Text = text
-        Label.Font = Enum.Font.GothamSemibold
-        Label.TextSize = 14
-        Label.TextColor3 = THEME.TEXT
-        Label.TextXAlignment = Enum.TextXAlignment.Left
-        
-        local Switch = Instance.new("Frame",Frame)
-        Switch.Size = UDim2.new(0,50,0,24)
-        Switch.Position = UDim2.new(1,-60,0.5,-12)
-        Switch.BackgroundColor3 = THEME.BG_BLACK
-        Instance.new("UICorner",Switch).CornerRadius = UDim.new(1,0)
-        
-        local Knob = Instance.new("Frame",Switch)
-        Knob.Size = UDim2.new(0,22,0,22)
-        Knob.Position = UDim2.new(0,1,0.5,-11)
-        Knob.BackgroundColor3 = THEME.TEXT_DIM
-        Instance.new("UICorner",Knob).CornerRadius = UDim.new(1,0)
-        
-        local state = default or false
-        local function Apply(on)
-            state = on
-            if on then
-                Knob.Position = UDim2.new(1,-23,0.5,-11)
-                Knob.BackgroundColor3 = THEME.RED_HOVER
-                Switch.BackgroundColor3 = THEME.RED_DARK
-            else
-                Knob.Position = UDim2.new(0,1,0.5,-11)
-                Knob.BackgroundColor3 = THEME.TEXT_DIM
-                Switch.BackgroundColor3 = THEME.BG_BLACK
-            end
-        end
-        Apply(state)
-        
-        Frame.InputBegan:Connect(function(i)
-            if i.UserInputType == Enum.UserInputType.MouseButton1 then
-                Apply(not state)
-                if callback then callback(state) end
-            end
-        end)
-        
-        return Frame
-    end
-    
-    -- 📝 LABEL
+
+    -- Label
     function Window:CreateLabel(text)
-        local Label = Instance.new("TextLabel",Container)
+        local Label = Instance.new("TextLabel", Container)
         Label.Size = UDim2.new(1,-20,0,28)
         Label.BackgroundTransparency = 1
         Label.Font = Enum.Font.GothamMedium
         Label.TextSize = 14
-        Label.TextColor3 = THEME.TEXT_DIM
+        Label.TextColor3 = C_TEXT_DIM
         Label.TextXAlignment = Enum.TextXAlignment.Left
         Label.Text = text
         return Label
     end
-    
+
     return Window
 end
 
