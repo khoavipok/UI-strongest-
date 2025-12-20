@@ -5,179 +5,383 @@ local UserInputService = game:GetService("UserInputService")
 
 local UILibrary = {}
 
--- 🔴🖤 RED BLACK COLOR ONLY (SAFE)
-local C_BG_MAIN   = Color3.fromRGB(14,14,14)
-local C_BG_TOP    = Color3.fromRGB(22,22,22)
-local C_BG_ITEM   = Color3.fromRGB(30,30,30)
-
-local C_RED_MAIN  = Color3.fromRGB(160,35,35)
-local C_RED_DARK  = Color3.fromRGB(120,25,25)
-local C_RED_HOVER = Color3.fromRGB(200,55,55)
-
-local C_TEXT_MAIN = Color3.fromRGB(255,210,210)
-local C_TEXT_DIM  = Color3.fromRGB(200,170,170)
-
 function UILibrary:CreateWindow(title, size)
     local ScreenGui = Instance.new("ScreenGui", game.CoreGui)
     ScreenGui.Name = "BaconBossUI"
     ScreenGui.ResetOnSpawn = false
     ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-    
-    -- Overlay
+
+    -- Overlay đen
     local Overlay = Instance.new("Frame", ScreenGui)
-    Overlay.Size = UDim2.new(1,0,1,0)
-    Overlay.BackgroundColor3 = Color3.fromRGB(0,0,0)
+    Overlay.Size = UDim2.new(1, 0, 1, 0)
+    Overlay.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
     Overlay.BackgroundTransparency = 0.7
     Overlay.ZIndex = 1
-    Overlay.Visible = true
-    
+    Overlay.Name = "Overlay"
+    Overlay.Active = false
+    Overlay.Selectable = false
+
     -- Main window
-    local MainFrame = Instance.new("Frame", ScreenGui)
-    MainFrame.Size = size or UDim2.new(0,520,0,340)
-    MainFrame.Position = UDim2.new(0.5,-260,0.5,-170)
-    MainFrame.BackgroundColor3 = C_BG_MAIN
-    MainFrame.ZIndex = 10
-    MainFrame.Active = true
+    local MainFrame = Instance.new("Frame")
+    MainFrame.Size = size or UDim2.new(0, 520, 0, 340)
+    MainFrame.Position = UDim2.new(0.5, -260, 0.5, -170)
+    MainFrame.BackgroundColor3 = Color3.fromRGB(15, 0, 0) -- Đổi thành đỏ đen
+    MainFrame.Parent = ScreenGui
     MainFrame.ClipsDescendants = true
-    
-    Instance.new("UICorner",MainFrame).CornerRadius = UDim.new(0,12)
-    local Stroke = Instance.new("UIStroke",MainFrame)
-    Stroke.Color = C_RED_DARK
+    MainFrame.ZIndex = 10
+    MainFrame.Name = "MainWindow"
+    MainFrame.Active = true
+    MainFrame.Selectable = true
+
+    local MainCorner = Instance.new("UICorner", MainFrame)
+    MainCorner.CornerRadius = UDim.new(0, 12)
+
+    local Stroke = Instance.new("UIStroke", MainFrame)
+    Stroke.Color = Color3.fromRGB(80, 0, 0) -- Đỏ đậm
     Stroke.Thickness = 2
     Stroke.Transparency = 0.3
-    
+
     -- Top bar
     local TopBar = Instance.new("Frame", MainFrame)
-    TopBar.Size = UDim2.new(1,0,0,40)
-    TopBar.BackgroundColor3 = C_BG_TOP
+    TopBar.Size = UDim2.new(1, 0, 0, 40)
+    TopBar.BackgroundColor3 = Color3.fromRGB(40, 0, 0) -- Đỏ đậm hơn
     TopBar.ZIndex = 12
+    TopBar.Name = "TopBar"
     TopBar.Active = true
-    
-    Instance.new("UICorner",TopBar).CornerRadius = UDim.new(0,12)
-    
+    TopBar.Selectable = true
+
+    local TopCorner = Instance.new("UICorner", TopBar)
+    TopCorner.CornerRadius = UDim.new(0, 12)
+
     -- Title
     local Title = Instance.new("TextLabel", TopBar)
-    Title.Text = title or "🩸 khanhlyHUB"
-    Title.TextColor3 = C_TEXT_MAIN
+    Title.Text = title or "✨ khanhlyHUB"
+    Title.TextColor3 = Color3.fromRGB(255, 220, 220) -- Đỏ nhạt cho chữ
     Title.BackgroundTransparency = 1
     Title.Font = Enum.Font.GothamBold
-    Title.Position = UDim2.new(0,15,0,0)
-    Title.Size = UDim2.new(1,-60,1,0)
+    Title.Position = UDim2.new(0, 15, 0, 0)
+    Title.Size = UDim2.new(1, -60, 1, 0)
     Title.TextSize = 16
     Title.TextXAlignment = Enum.TextXAlignment.Left
     Title.ZIndex = 13
-    
-    -- Toggle button
+    Title.Active = false
+    Title.Selectable = false
+
+    -- Nút toggle ẩn/hiện DUY NHẤT
     local ToggleBtn = Instance.new("TextButton", TopBar)
-    ToggleBtn.Size = UDim2.new(0,34,0,34)
-    ToggleBtn.Position = UDim2.new(1,-42,0.5,-17)
-    ToggleBtn.BackgroundColor3 = C_RED_DARK
+    ToggleBtn.Size = UDim2.new(0, 34, 0, 34)
+    ToggleBtn.Position = UDim2.new(1, -42, 0.5, -17)
+    ToggleBtn.BackgroundColor3 = Color3.fromRGB(100, 0, 0) -- Đỏ
     ToggleBtn.Text = "-"
-    ToggleBtn.TextColor3 = C_TEXT_MAIN
+    ToggleBtn.TextColor3 = Color3.fromRGB(255, 220, 220)
     ToggleBtn.Font = Enum.Font.GothamBold
     ToggleBtn.TextSize = 18
     ToggleBtn.ZIndex = 13
     ToggleBtn.AutoButtonColor = false
-    
-    Instance.new("UICorner",ToggleBtn).CornerRadius = UDim.new(0,8)
-    local ToggleStroke = Instance.new("UIStroke",ToggleBtn)
-    ToggleStroke.Color = C_RED_MAIN
+    ToggleBtn.Name = "ToggleButton"
+
+    local ToggleCorner = Instance.new("UICorner", ToggleBtn)
+    ToggleCorner.CornerRadius = UDim.new(0, 8)
+
+    local ToggleStroke = Instance.new("UIStroke", ToggleBtn)
+    ToggleStroke.Color = Color3.fromRGB(120, 20, 20) -- Đỏ sáng hơn
     ToggleStroke.Thickness = 2
-    
-    -- ScrollFrame
+
+    -- 🔄 SCROLLINGFRAME CHỨA NỘI DUNG
     local ScrollFrame = Instance.new("ScrollingFrame", MainFrame)
-    ScrollFrame.Size = UDim2.new(1,0,1,-50)
-    ScrollFrame.Position = UDim2.new(0,0,0,45)
+    ScrollFrame.Size = UDim2.new(1, 0, 1, -50)
+    ScrollFrame.Position = UDim2.new(0, 0, 0, 45)
     ScrollFrame.BackgroundTransparency = 1
     ScrollFrame.ZIndex = 11
+    ScrollFrame.Name = "ScrollContainer"
+    ScrollFrame.ScrollingEnabled = true
     ScrollFrame.ScrollBarThickness = 6
-    ScrollFrame.ScrollBarImageColor3 = C_RED_MAIN
+    ScrollFrame.ScrollBarImageColor3 = Color3.fromRGB(100, 0, 0) -- Đỏ
     ScrollFrame.BorderSizePixel = 0
-    ScrollFrame.CanvasSize = UDim2.new(0,0,0,0)
-    
+    ScrollFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
+    ScrollFrame.Visible = true
+
+    -- Container bên trong ScrollFrame
     local Container = Instance.new("Frame", ScrollFrame)
-    Container.Size = UDim2.new(1,0,0,0)
+    Container.Size = UDim2.new(1, 0, 0, 0)
     Container.BackgroundTransparency = 1
-    
+    Container.ZIndex = 11
+    Container.Name = "ContentContainer"
+
     local Layout = Instance.new("UIListLayout", Container)
-    Layout.Padding = UDim.new(0,10)
+    Layout.Padding = UDim.new(0, 10)
     Layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
-    
-    Instance.new("UIPadding",Container).PaddingTop = UDim.new(0,10)
-    
+    Layout.SortOrder = Enum.SortOrder.LayoutOrder
+
+    local Pad = Instance.new("UIPadding", Container)
+    Pad.PaddingTop = UDim.new(0, 10)
+    Pad.PaddingLeft = UDim.new(0, 10)
+    Pad.PaddingRight = UDim.new(0, 10)
+    Pad.PaddingBottom = UDim.new(0, 10)
+
+    -- Cập nhật kích thước Canvas
     Layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-        Container.Size = UDim2.new(1,0,0,Layout.AbsoluteContentSize.Y)
-        ScrollFrame.CanvasSize = UDim2.new(0,0,0,Layout.AbsoluteContentSize.Y + 20)
+        Container.Size = UDim2.new(1, 0, 0, Layout.AbsoluteContentSize.Y)
+        ScrollFrame.CanvasSize = UDim2.new(0, 0, 0, Layout.AbsoluteContentSize.Y + 20)
     end)
 
-    -- Toggle UI (GIỮ NGUYÊN LOGIC)
+    -- Biến trạng thái
     local Hidden = false
-    ToggleBtn.MouseButton1Click:Connect(function()
-        Hidden = not Hidden
-        ScrollFrame.Visible = not Hidden
-        Overlay.Visible = not Hidden
-        ToggleBtn.Text = Hidden and "+" or "-"
+
+    -- ========================
+    -- ⭐ DRAGGING CROSS-PLATFORM HOÀN CHỈNH
+    -- ========================
+    local dragging = false
+    local dragStart
+    local startPos
+
+    local function update(input)
+        local delta = input.Position - dragStart
+        MainFrame.Position = UDim2.new(
+            startPos.X.Scale, startPos.X.Offset + delta.X,
+            startPos.Y.Scale, startPos.Y.Offset + delta.Y
+        )
+    end
+
+    TopBar.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            -- Chặn kéo nếu nhấn vào ToggleBtn
+            local pos = input.Position
+            local btnPos = ToggleBtn.AbsolutePosition
+            local btnSize = ToggleBtn.AbsoluteSize
+            if pos.X >= btnPos.X and pos.X <= btnPos.X + btnSize.X and pos.Y >= btnPos.Y and pos.Y <= btnPos.Y + btnSize.Y then
+                return -- click vào button → không kéo
+            end
+            dragging = true
+            dragStart = pos
+            startPos = MainFrame.Position
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragging = false
+                end
+            end)
+        end
     end)
 
+    UserInputService.InputChanged:Connect(function(input)
+        if dragging then
+            if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+                update(input)
+            end
+        end
+    end)
+
+    -- ========================
+    -- 🔧 TOGGLE ẨN/HIỆN UI
+    local function ToggleUI()
+        Hidden = not Hidden
+        if Hidden then
+            -- Ẩn HOÀN TOÀN: content + overlay
+            ScrollFrame.Visible = false
+            Overlay.Visible = false -- Ẩn overlay đen
+            
+            -- Thu nhỏ chỉ còn TopBar
+            MainFrame:TweenSize(UDim2.new(MainFrame.Size.X.Scale, MainFrame.Size.X.Offset, 0, 40), "Out", "Quad", 0.3, true)
+            
+            -- Đẩy lên trên cùng
+            local currentPos = MainFrame.Position
+            local targetY = math.max(5, currentPos.Y.Offset) -- Đảm bảo không ra khỏi màn hình
+            MainFrame:TweenPosition(UDim2.new(currentPos.X.Scale, currentPos.X.Offset, 0, targetY), "Out", "Quad", 0.3, true)
+            
+            ToggleBtn.Text = "+"
+        else
+            -- Hiện lại TẤT CẢ
+            Overlay.Visible = true -- Hiện overlay đen
+            ScrollFrame.Visible = true
+            
+            -- Trở về kích thước ban đầu
+            MainFrame:TweenSize(size or UDim2.new(0, 520, 0, 340), "Out", "Quad", 0.3, true)
+            
+            -- Kéo về giữa màn hình
+            MainFrame:TweenPosition(UDim2.new(0.5, -260, 0.5, -170), "Out", "Quad", 0.3, true)
+            
+            ToggleBtn.Text = "-"
+        end
+    end
+
+    -- Kết nối sự kiện
+    ToggleBtn.MouseButton1Click:Connect(ToggleUI)
+
+    -- Hiệu ứng hover cho nút
     ToggleBtn.MouseEnter:Connect(function()
-        ToggleBtn.BackgroundColor3 = C_RED_HOVER
+        ToggleBtn.BackgroundColor3 = Color3.fromRGB(130, 20, 20) -- Đỏ sáng hơn
     end)
+    
     ToggleBtn.MouseLeave:Connect(function()
-        ToggleBtn.BackgroundColor3 = C_RED_DARK
+        ToggleBtn.BackgroundColor3 = Color3.fromRGB(100, 0, 0)
     end)
+    
     ToggleBtn.MouseButton1Down:Connect(function()
-        ToggleBtn.BackgroundColor3 = C_RED_MAIN
+        ToggleBtn.BackgroundColor3 = Color3.fromRGB(90, 0, 0) -- Đỏ tối hơn
     end)
+    
     ToggleBtn.MouseButton1Up:Connect(function()
-        ToggleBtn.BackgroundColor3 = C_RED_HOVER
+        ToggleBtn.BackgroundColor3 = Color3.fromRGB(130, 20, 20)
     end)
 
     local Window = {}
+    
     function Window:GetContainer()
         return Container
     end
 
-    -- Button
+    -- 🟢 BUTTON
     function Window:CreateButton(text, callback)
         local Btn = Instance.new("TextButton", Container)
-        Btn.Size = UDim2.new(1,-20,0,40)
-        Btn.BackgroundColor3 = C_BG_ITEM
+        Btn.Size = UDim2.new(1, -20, 0, 40)
+        Btn.BackgroundColor3 = Color3.fromRGB(60, 0, 0) -- Đỏ đậm
         Btn.Text = text
-        Btn.TextColor3 = C_TEXT_MAIN
+        Btn.TextColor3 = Color3.fromRGB(255, 220, 220) -- Đỏ nhạt cho chữ
         Btn.Font = Enum.Font.GothamSemibold
         Btn.TextSize = 14
         Btn.AutoButtonColor = false
-        
-        Instance.new("UICorner",Btn).CornerRadius = UDim.new(0,8)
-        local BtnStroke = Instance.new("UIStroke",Btn)
-        BtnStroke.Color = C_RED_MAIN
+        Btn.ZIndex = 12
+        Btn.Active = true
+        Btn.Selectable = true
+        Btn.Name = "Button_" .. text
+
+        local BtnCorner = Instance.new("UICorner", Btn)
+        BtnCorner.CornerRadius = UDim.new(0, 8)
+
+        local BtnStroke = Instance.new("UIStroke", Btn)
+        BtnStroke.Color = Color3.fromRGB(90, 0, 0) -- Viền đỏ đậm
         BtnStroke.Thickness = 1.5
-        
+
         Btn.MouseEnter:Connect(function()
-            Btn.BackgroundColor3 = C_RED_DARK
-            BtnStroke.Color = C_RED_HOVER
+            Btn.BackgroundColor3 = Color3.fromRGB(90, 10, 10) -- Đỏ sáng hơn
+            BtnStroke.Color = Color3.fromRGB(120, 20, 20)
         end)
+        
         Btn.MouseLeave:Connect(function()
-            Btn.BackgroundColor3 = C_BG_ITEM
-            BtnStroke.Color = C_RED_MAIN
+            Btn.BackgroundColor3 = Color3.fromRGB(60, 0, 0)
+            BtnStroke.Color = Color3.fromRGB(90, 0, 0)
         end)
         
         Btn.MouseButton1Click:Connect(function()
-            if callback then pcall(callback) end
+            if callback then
+                pcall(callback)
+            end
         end)
+        
         return Btn
     end
 
-    -- Label
+    -- 🔘 TOGGLE
+    function Window:CreateToggle(text, callback, default)
+        local ToggleFrame = Instance.new("Frame", Container)
+        ToggleFrame.Size = UDim2.new(1, -20, 0, 40)
+        ToggleFrame.BackgroundColor3 = Color3.fromRGB(40, 0, 0) -- Đỏ đậm
+        ToggleFrame.ZIndex = 12
+        ToggleFrame.Active = false
+        ToggleFrame.Selectable = false
+        ToggleFrame.Name = "Toggle_" .. text
+
+        local ToggleCorner = Instance.new("UICorner", ToggleFrame)
+        ToggleCorner.CornerRadius = UDim.new(0, 8)
+
+        local FrameStroke = Instance.new("UIStroke", ToggleFrame)
+        FrameStroke.Color = Color3.fromRGB(70, 0, 0) -- Viền đỏ đậm
+        FrameStroke.Thickness = 1.5
+
+        -- Label
+        local Label = Instance.new("TextLabel", ToggleFrame)
+        Label.Size = UDim2.new(0.7, 0, 1, 0)
+        Label.Position = UDim2.new(0, 10, 0, 0)
+        Label.BackgroundTransparency = 1
+        Label.Font = Enum.Font.GothamSemibold
+        Label.TextSize = 14
+        Label.TextColor3 = Color3.fromRGB(255, 220, 220) -- Đỏ nhạt cho chữ
+        Label.TextXAlignment = Enum.TextXAlignment.Left
+        Label.Text = text
+        Label.ZIndex = 13
+        Label.Active = false
+        Label.Selectable = false
+
+        -- Switch background
+        local SwitchBg = Instance.new("Frame", ToggleFrame)
+        SwitchBg.Size = UDim2.new(0, 50, 0, 24)
+        SwitchBg.Position = UDim2.new(1, -60, 0.5, -12)
+        SwitchBg.BackgroundColor3 = Color3.fromRGB(70, 10, 10) -- Đỏ đậm
+        SwitchBg.BorderSizePixel = 0
+        SwitchBg.ZIndex = 13
+        SwitchBg.Active = false
+        SwitchBg.Selectable = false
+
+        local SwitchCorner = Instance.new("UICorner", SwitchBg)
+        SwitchCorner.CornerRadius = UDim.new(1, 0)
+
+        -- Knob
+        local Knob = Instance.new("Frame", SwitchBg)
+        Knob.Size = UDim2.new(0, 22, 0, 22)
+        Knob.Position = UDim2.new(0, 1, 0.5, -11)
+        Knob.BackgroundColor3 = Color3.fromRGB(100, 100, 100) -- Xám
+        Knob.BorderSizePixel = 0
+        Knob.ZIndex = 14
+        Knob.Active = false
+        Knob.Selectable = false
+
+        local KnobCorner = Instance.new("UICorner", Knob)
+        KnobCorner.CornerRadius = UDim.new(1, 0)
+
+        -- Nút bấm thực tế
+        local HitButton = Instance.new("TextButton", ToggleFrame)
+        HitButton.Size = UDim2.new(1, 0, 1, 0)
+        HitButton.BackgroundTransparency = 1
+        HitButton.Text = ""
+        HitButton.ZIndex = 15
+        HitButton.Active = true
+        HitButton.Selectable = true
+        HitButton.Name = "ToggleHit_" .. text
+
+        local state = default or false
+
+        local function ApplyState(on)
+            state = on
+            if on then
+                Knob.Position = UDim2.new(1, -23, 0.5, -11)
+                Knob.BackgroundColor3 = Color3.fromRGB(255, 50, 50) -- Đỏ sáng
+                SwitchBg.BackgroundColor3 = Color3.fromRGB(120, 30, 30) -- Đỏ
+            else
+                Knob.Position = UDim2.new(0, 1, 0.5, -11)
+                Knob.BackgroundColor3 = Color3.fromRGB(100, 100, 100) -- Xám
+                SwitchBg.BackgroundColor3 = Color3.fromRGB(70, 10, 10) -- Đỏ đậm
+            end
+        end
+
+        ApplyState(state)
+
+        HitButton.MouseButton1Click:Connect(function()
+            ApplyState(not state)
+            if callback then
+                pcall(function()
+                    callback(state)
+                end)
+            end
+        end)
+
+        return ToggleFrame
+    end
+
+    -- 📝 LABEL
     function Window:CreateLabel(text)
         local Label = Instance.new("TextLabel", Container)
-        Label.Size = UDim2.new(1,-20,0,28)
+        Label.Size = UDim2.new(1, -20, 0, 28)
         Label.BackgroundTransparency = 1
         Label.Font = Enum.Font.GothamMedium
         Label.TextSize = 14
-        Label.TextColor3 = C_TEXT_DIM
+        Label.TextColor3 = Color3.fromRGB(255, 180, 180) -- Đỏ hồng nhạt
         Label.TextXAlignment = Enum.TextXAlignment.Left
         Label.Text = text
+        Label.ZIndex = 12
+        Label.Active = false
+        Label.Selectable = false
+        Label.Name = "Label_" .. text
+        
         return Label
     end
 
