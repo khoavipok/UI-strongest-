@@ -24,7 +24,7 @@ function Library:CreateWindow(cfg)
     ScreenGui.ResetOnSpawn = false
     ScreenGui.Parent = game.CoreGui
 
-    -- MAIN FRAME (GIỐNG MẪU BẠN GỬI)
+    -- MAIN FRAME
     local Main = Instance.new("Frame", ScreenGui)
     Main.Size = UDim2.new(0, 240, 0, 320)
     Main.Position = UDim2.new(0, 20, 0.5, -160)
@@ -32,26 +32,33 @@ function Library:CreateWindow(cfg)
     Main.BackgroundTransparency = 0.15
     Main.Active = true
     Main.Draggable = true
+    Main.Visible = false -- Ẩn ban đầu
     Round(Main, 8)
 
     -- STROKE + GRADIENT SÓNG
     local Stroke = Instance.new("UIStroke", Main)
     Stroke.Thickness = 2
+    Stroke.Color = Color3.fromRGB(120,180,255) -- Màu viền mặc định
 
     local Gradient = Instance.new("UIGradient", Stroke)
     Gradient.Color = ColorSequence.new{
         ColorSequenceKeypoint.new(0, Color3.fromRGB(80,180,255)),
         ColorSequenceKeypoint.new(1, Color3.fromRGB(160,90,255))
     }
+    Gradient.Rotation = 0
+    Gradient.Enabled = true
 
+    -- Animation xoay viền
     task.spawn(function()
         while true do
-            TweenService:Create(
+            local tween = TweenService:Create(
                 Gradient,
                 TweenInfo.new(4, Enum.EasingStyle.Linear),
                 {Rotation = 360}
-            ):Play()
-            task.wait(4)
+            )
+            tween:Play()
+            tween.Completed:Wait()
+            Gradient.Rotation = 0
         end
     end)
 
@@ -63,6 +70,7 @@ function Library:CreateWindow(cfg)
     Title.TextSize = 14
     Title.TextColor3 = Color3.fromRGB(230,230,230)
     Title.BackgroundColor3 = Color3.fromRGB(45,45,45)
+    Title.TextXAlignment = Enum.TextXAlignment.Center
     Round(Title, 8)
 
     -- SCROLL CONTAINER
@@ -99,9 +107,40 @@ function Library:CreateWindow(cfg)
     OBStroke.Thickness = 2
     OBStroke.Color = Color3.fromRGB(120,180,255)
 
-    OpenBtn.MouseButton1Click:Connect(function()
-        Main.Visible = not Main.Visible
-    end)
+    local OpenBtnGradient = Instance.new("UIGradient", OpenBtn)
+    OpenBtnGradient.Color = ColorSequence.new{
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(80,180,255)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(160,90,255))
+    }
+
+    -- Hiệu ứng ẩn/hiện UI
+    local uiVisible = false
+    local function toggleUI()
+        if uiVisible then
+            -- Ẩn UI với hiệu ứng
+            Tween(Main, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                Size = UDim2.new(0, 0, 0, 0),
+                Position = UDim2.new(0, 20, 0.5, -160),
+                BackgroundTransparency = 1
+            })
+            wait(0.3)
+            Main.Visible = false
+        else
+            -- Hiện UI với hiệu ứng
+            Main.Visible = true
+            Main.Size = UDim2.new(0, 0, 0, 0)
+            Main.Position = UDim2.new(0, 20, 0.5, -160)
+            Main.BackgroundTransparency = 1
+            
+            Tween(Main, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+                Size = UDim2.new(0, 240, 0, 320),
+                BackgroundTransparency = 0.15
+            })
+        end
+        uiVisible = not uiVisible
+    end
+
+    OpenBtn.MouseButton1Click:Connect(toggleUI)
 
     local Window = {}
 
@@ -114,33 +153,62 @@ function Library:CreateWindow(cfg)
         if cfg2.StrokeColor then OBStroke.Color = cfg2.StrokeColor end
     end
 
-    -- TAB (THỰC CHẤT DÙNG CHUNG CONTAINER ĐỂ GIỐNG UI MẪU)
+    -- TAB
     function Window:CreateTab()
         local Tab = {}
 
         function Tab:CreateButton(text, callback)
             local btn = Instance.new("TextButton", Container)
-            btn.Size = UDim2.new(1,0,0,35)
+            btn.Size = UDim2.new(0.95, 0, 0, 35)
             btn.Text = text
             btn.Font = Enum.Font.Gotham
             btn.TextSize = 13
             btn.TextColor3 = Color3.new(1,1,1)
             btn.BackgroundColor3 = Color3.fromRGB(45,45,45)
+            btn.AutoButtonColor = false
             Round(btn,6)
+            
+            -- Thêm hiệu ứng nổi 3D
+            local btnShadow = Instance.new("UIStroke", btn)
+            btnShadow.Thickness = 1
+            btnShadow.Color = Color3.fromRGB(20,20,20)
+            btnShadow.Transparency = 0.5
+            
+            local btnHighlight = Instance.new("UIStroke", btn)
+            btnHighlight.Thickness = 1
+            btnHighlight.Color = Color3.fromRGB(100,100,100)
+            btnHighlight.Transparency = 0.8
+            btnHighlight.LineJoinMode = Enum.LineJoinMode.Round
 
+            -- Hiệu ứng hover
             btn.MouseEnter:Connect(function()
                 Tween(btn, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(60,60,60)})
+                Tween(btn, TweenInfo.new(0.2), {Position = UDim2.new(0.025, 0, 0, btn.Position.Y.Offset)})
+                Tween(btnShadow, TweenInfo.new(0.2), {Transparency = 0.2})
+                Tween(btnHighlight, TweenInfo.new(0.2), {Transparency = 0.3})
             end)
+            
             btn.MouseLeave:Connect(function()
                 Tween(btn, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(45,45,45)})
+                Tween(btn, TweenInfo.new(0.2), {Position = UDim2.new(0.025, 0, 0, btn.Position.Y.Offset)})
+                Tween(btnShadow, TweenInfo.new(0.2), {Transparency = 0.5})
+                Tween(btnHighlight, TweenInfo.new(0.2), {Transparency = 0.8})
             end)
 
-            btn.MouseButton1Click:Connect(callback)
+            -- Hiệu ứng click (loé sáng)
+            btn.MouseButton1Click:Connect(function()
+                local originalColor = btn.BackgroundColor3
+                Tween(btn, TweenInfo.new(0.1), {BackgroundColor3 = Color3.fromRGB(120,180,255)})
+                wait(0.1)
+                Tween(btn, TweenInfo.new(0.1), {BackgroundColor3 = originalColor})
+                wait(0.1)
+                callback()
+            end)
         end
 
         function Tab:CreateToggle(text, default, callback)
             local holder = Instance.new("Frame", Container)
-            holder.Size = UDim2.new(1,0,0,34)
+            holder.Size = UDim2.new(0.95, 0, 0, 34)
             holder.BackgroundTransparency = 1
 
             local label = Instance.new("TextLabel", holder)
@@ -150,29 +218,45 @@ function Library:CreateWindow(cfg)
             label.TextSize = 13
             label.TextColor3 = Color3.fromRGB(230,230,230)
             label.BackgroundTransparency = 1
-            label.TextXAlignment = Left
+            label.TextXAlignment = Enum.TextXAlignment.Left
 
             local toggle = Instance.new("Frame", holder)
             toggle.Size = UDim2.new(0,46,0,20)
             toggle.Position = UDim2.new(1,-50,0.5,-10)
             toggle.BackgroundColor3 = Color3.fromRGB(70,70,70)
+            toggle.BorderSizePixel = 0
             Round(toggle,10)
+            
+            -- Thêm stroke cho toggle
+            local toggleStroke = Instance.new("UIStroke", toggle)
+            toggleStroke.Thickness = 1
+            toggleStroke.Color = Color3.fromRGB(50,50,50)
 
             local circle = Instance.new("Frame", toggle)
             circle.Size = UDim2.new(0,16,0,16)
             circle.Position = UDim2.new(0,2,0.5,-8)
             circle.BackgroundColor3 = Color3.fromRGB(220,220,220)
+            circle.BorderSizePixel = 0
             Round(circle,8)
+            
+            -- Thêm stroke cho circle
+            local circleStroke = Instance.new("UIStroke", circle)
+            circleStroke.Thickness = 1
+            circleStroke.Color = Color3.fromRGB(180,180,180)
 
             local state = default
 
             local function refresh()
                 if state then
-                    Tween(toggle, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(90,180,255)})
+                    Tween(toggle, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(80,180,255)})
+                    Tween(toggleStroke, TweenInfo.new(0.2), {Color = Color3.fromRGB(60,150,225)})
                     Tween(circle, TweenInfo.new(0.2), {Position = UDim2.new(1,-18,0.5,-8)})
+                    Tween(circle, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(240,240,240)})
                 else
                     Tween(toggle, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(70,70,70)})
+                    Tween(toggleStroke, TweenInfo.new(0.2), {Color = Color3.fromRGB(50,50,50)})
                     Tween(circle, TweenInfo.new(0.2), {Position = UDim2.new(0,2,0.5,-8)})
+                    Tween(circle, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(220,220,220)})
                 end
             end
 
@@ -189,7 +273,7 @@ function Library:CreateWindow(cfg)
 
         function Tab:CreateSlider(text, min, max, default, callback)
             local holder = Instance.new("Frame", Container)
-            holder.Size = UDim2.new(1,0,0,50)
+            holder.Size = UDim2.new(0.95, 0, 0, 50)
             holder.BackgroundTransparency = 1
 
             local label = Instance.new("TextLabel", holder)
@@ -199,27 +283,49 @@ function Library:CreateWindow(cfg)
             label.TextSize = 13
             label.TextColor3 = Color3.fromRGB(200,220,255)
             label.BackgroundTransparency = 1
-            label.TextXAlignment = Left
+            label.TextXAlignment = Enum.TextXAlignment.Left
 
             local bar = Instance.new("Frame", holder)
             bar.Position = UDim2.new(0,0,0,28)
             bar.Size = UDim2.new(1,0,0,8)
             bar.BackgroundColor3 = Color3.fromRGB(60,60,60)
+            bar.BorderSizePixel = 0
             Round(bar,8)
+            
+            -- Thêm stroke cho bar
+            local barStroke = Instance.new("UIStroke", bar)
+            barStroke.Thickness = 1
+            barStroke.Color = Color3.fromRGB(40,40,40)
 
             local fill = Instance.new("Frame", bar)
             fill.Size = UDim2.new((default-min)/(max-min),0,1,0)
             fill.BackgroundColor3 = Color3.fromRGB(120,180,255)
+            fill.BorderSizePixel = 0
             Round(fill,8)
+            
+            -- Thêm stroke cho fill
+            local fillStroke = Instance.new("UIStroke", fill)
+            fillStroke.Thickness = 1
+            fillStroke.Color = Color3.fromRGB(100,160,235)
 
             local dragging = false
 
             bar.InputBegan:Connect(function(i)
-                if i.UserInputType == Enum.UserInputType.MouseButton1 then dragging = true end
+                if i.UserInputType == Enum.UserInputType.MouseButton1 then 
+                    dragging = true 
+                    Tween(fill, TweenInfo.new(0.1), {BackgroundColor3 = Color3.fromRGB(140,200,255)})
+                    Tween(fillStroke, TweenInfo.new(0.1), {Color = Color3.fromRGB(120,180,235)})
+                end
             end)
+            
             UserInputService.InputEnded:Connect(function(i)
-                if i.UserInputType == Enum.UserInputType.MouseButton1 then dragging = false end
+                if i.UserInputType == Enum.UserInputType.MouseButton1 then 
+                    dragging = false
+                    Tween(fill, TweenInfo.new(0.1), {BackgroundColor3 = Color3.fromRGB(120,180,255)})
+                    Tween(fillStroke, TweenInfo.new(0.1), {Color = Color3.fromRGB(100,160,235)})
+                end
             end)
+            
             UserInputService.InputChanged:Connect(function(i)
                 if dragging and i.UserInputType == Enum.UserInputType.MouseMovement then
                     local p = math.clamp((i.Position.X-bar.AbsolutePosition.X)/bar.AbsoluteSize.X,0,1)
