@@ -1,0 +1,231 @@
+--// KHANHLY UI LIBRARY | FULL VERSION
+--// GitHub Ready | Clean API | Smooth UI
+
+local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
+
+local Library = {}
+
+--================ UTILS =================--
+local function Round(obj, r)
+    local c = Instance.new("UICorner")
+    c.CornerRadius = UDim.new(0, r)
+    c.Parent = obj
+end
+
+local function Tween(obj, t, p)
+    TweenService:Create(obj, t, p):Play()
+end
+
+--================ WINDOW =================--
+function Library:CreateWindow(cfg)
+    local ScreenGui = Instance.new("ScreenGui", game.CoreGui)
+    ScreenGui.ResetOnSpawn = false
+
+    local Main = Instance.new("Frame", ScreenGui)
+    Main.Size = UDim2.new(0, 480, 0, 320)
+    Main.Position = UDim2.new(0.5, -240, 0.5, -160)
+    Main.BackgroundColor3 = Color3.fromRGB(28,28,28)
+    Main.Active = true
+    Main.Draggable = true
+    Round(Main, 14)
+
+    local Stroke = Instance.new("UIStroke", Main)
+    Stroke.Thickness = 2
+    Stroke.Color = Color3.fromRGB(120,160,255)
+    local Grad = Instance.new("UIGradient", Stroke)
+    Grad.Color = ColorSequence.new{
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(120,200,255)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(160,100,255))
+    }
+
+    local Header = Instance.new("TextLabel", Main)
+    Header.Size = UDim2.new(1,0,0,40)
+    Header.Text = cfg.Title or "Window"
+    Header.Font = Enum.Font.GothamBold
+    Header.TextSize = 18
+    Header.TextColor3 = Color3.fromRGB(190,210,255)
+    Header.BackgroundTransparency = 1
+
+    local Tabs = Instance.new("Frame", Main)
+    Tabs.Position = UDim2.new(0,10,0,45)
+    Tabs.Size = UDim2.new(0,130,1,-55)
+    Tabs.BackgroundTransparency = 1
+    local TL = Instance.new("UIListLayout", Tabs)
+    TL.Padding = UDim.new(0,6)
+
+    local Pages = Instance.new("Frame", Main)
+    Pages.Position = UDim2.new(0,150,0,45)
+    Pages.Size = UDim2.new(1,-160,1,-55)
+    Pages.BackgroundTransparency = 1
+
+    --================ OPEN BUTTON =================--
+    local OpenBtn = Instance.new("ImageButton", ScreenGui)
+    OpenBtn.Size = UDim2.new(0, 44, 0, 44)
+    OpenBtn.Position = UDim2.new(0, 20, 0.5, -22)
+    OpenBtn.BackgroundColor3 = Color3.fromRGB(35,35,35)
+    OpenBtn.Active = true
+    OpenBtn.Draggable = true
+    Round(OpenBtn, 22)
+
+    local OBStroke = Instance.new("UIStroke", OpenBtn)
+    OBStroke.Thickness = 2
+    OBStroke.Color = Color3.fromRGB(120,180,255)
+
+    OpenBtn.MouseButton1Click:Connect(function()
+        Main.Visible = not Main.Visible
+    end)
+
+    local Window = {}
+
+    function Window:EditOpenButton(cfg)
+        if cfg.Icon then OpenBtn.Image = cfg.Icon end
+        if cfg.Size then OpenBtn.Size = cfg.Size end
+        if cfg.Position then OpenBtn.Position = cfg.Position end
+        if cfg.BackgroundColor then OpenBtn.BackgroundColor3 = cfg.BackgroundColor end
+        if cfg.StrokeColor then OBStroke.Color = cfg.StrokeColor end
+    end
+
+    function Window:CreateTab(name)
+        local TabBtn = Instance.new("TextButton", Tabs)
+        TabBtn.Size = UDim2.new(1,0,0,36)
+        TabBtn.Text = name
+        TabBtn.Font = Enum.Font.Gotham
+        TabBtn.TextSize = 14
+        TabBtn.TextColor3 = Color3.fromRGB(220,220,220)
+        TabBtn.BackgroundColor3 = Color3.fromRGB(40,40,40)
+        Round(TabBtn,10)
+
+        local Page = Instance.new("ScrollingFrame", Pages)
+        Page.Size = UDim2.new(1,0,1,0)
+        Page.CanvasSize = UDim2.new(0,0,0,0)
+        Page.ScrollBarImageTransparency = 1
+        Page.AutomaticCanvasSize = Enum.AutomaticSize.Y
+        Page.Visible = false
+        Page.BackgroundTransparency = 1
+
+        local PL = Instance.new("UIListLayout", Page)
+        PL.Padding = UDim.new(0,10)
+
+        TabBtn.MouseButton1Click:Connect(function()
+            for _,v in pairs(Pages:GetChildren()) do
+                if v:IsA("ScrollingFrame") then v.Visible = false end
+            end
+            Page.Visible = true
+        end)
+
+        Page.Visible = true
+
+        local Tab = {}
+
+        function Tab:CreateButton(text, callback)
+            local B = Instance.new("TextButton", Page)
+            B.Size = UDim2.new(1,0,0,36)
+            B.Text = text
+            B.Font = Enum.Font.Gotham
+            B.TextSize = 14
+            B.TextColor3 = Color3.fromRGB(230,230,230)
+            B.BackgroundColor3 = Color3.fromRGB(45,45,45)
+            Round(B,10)
+
+            B.MouseButton1Click:Connect(callback)
+        end
+
+        function Tab:CreateToggle(text, default, callback)
+            local F = Instance.new("Frame", Page)
+            F.Size = UDim2.new(1,0,0,36)
+            F.BackgroundTransparency = 1
+
+            local L = Instance.new("TextLabel", F)
+            L.Size = UDim2.new(0.7,0,1,0)
+            L.Text = text
+            L.Font = Enum.Font.Gotham
+            L.TextSize = 14
+            L.TextColor3 = Color3.fromRGB(220,220,220)
+            L.BackgroundTransparency = 1
+            L.TextXAlignment = Left
+
+            local T = Instance.new("Frame", F)
+            T.Size = UDim2.new(0,50,0,22)
+            T.Position = UDim2.new(1,-55,0.5,-11)
+            T.BackgroundColor3 = Color3.fromRGB(70,70,70)
+            Round(T,22)
+
+            local C = Instance.new("Frame", T)
+            C.Size = UDim2.new(0,18,0,18)
+            C.Position = UDim2.new(0,2,0.5,-9)
+            C.BackgroundColor3 = Color3.fromRGB(220,220,220)
+            Round(C,18)
+
+            local State = default
+            local function Refresh()
+                if State then
+                    Tween(T, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(90,180,255)})
+                    Tween(C, TweenInfo.new(0.2), {Position = UDim2.new(1,-20,0.5,-9)})
+                else
+                    Tween(T, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(70,70,70)})
+                    Tween(C, TweenInfo.new(0.2), {Position = UDim2.new(0,2,0.5,-9)})
+                end
+            end
+
+            T.InputBegan:Connect(function(i)
+                if i.UserInputType == Enum.UserInputType.MouseButton1 then
+                    State = not State
+                    Refresh()
+                    callback(State)
+                end
+            end)
+
+            Refresh()
+        end
+
+        function Tab:CreateSlider(text, min, max, default, callback)
+            local F = Instance.new("Frame", Page)
+            F.Size = UDim2.new(1,0,0,50)
+            F.BackgroundTransparency = 1
+
+            local L = Instance.new("TextLabel", F)
+            L.Size = UDim2.new(1,0,0,20)
+            L.Text = text..": "..default
+            L.Font = Enum.Font.Gotham
+            L.TextSize = 13
+            L.TextColor3 = Color3.fromRGB(200,220,255)
+            L.BackgroundTransparency = 1
+            L.TextXAlignment = Left
+
+            local Bar = Instance.new("Frame", F)
+            Bar.Position = UDim2.new(0,0,0,28)
+            Bar.Size = UDim2.new(1,0,0,8)
+            Bar.BackgroundColor3 = Color3.fromRGB(60,60,60)
+            Round(Bar,8)
+
+            local Fill = Instance.new("Frame", Bar)
+            Fill.Size = UDim2.new((default-min)/(max-min),0,1,0)
+            Fill.BackgroundColor3 = Color3.fromRGB(120,180,255)
+            Round(Fill,8)
+
+            local drag = false
+            Bar.InputBegan:Connect(function(i)
+                if i.UserInputType == Enum.UserInputType.MouseButton1 then drag = true end
+            end)
+            UserInputService.InputEnded:Connect(function(i)
+                if i.UserInputType == Enum.UserInputType.MouseButton1 then drag = false end
+            end)
+            UserInputService.InputChanged:Connect(function(i)
+                if drag and i.UserInputType == Enum.UserInputType.MouseMovement then
+                    local p = math.clamp((i.Position.X-Bar.AbsolutePosition.X)/Bar.AbsoluteSize.X,0,1)
+                    Fill.Size = UDim2.new(p,0,1,0)
+                    local val = math.floor(min+(max-min)*p)
+                    L.Text = text..": "..val
+                    callback(val)
+                end
+            end)
+        end
+
+        return Tab
+    end
+
+    return Window
+end
+
+return Library
