@@ -89,7 +89,7 @@ function Library:CreateWindow(cfg)
     Title.TextXAlignment = Enum.TextXAlignment.Center
     Round(Title, 8)
 
-    -- SCROLL CONTAINER (cải thiện cho mobile)
+    -- SCROLL CONTAINER (CHUẨN ROBOX - KHÔNG LỖI)
     local Container = Instance.new("ScrollingFrame", Main)
     Container.Position = UDim2.new(0,5,0,35)
     Container.Size = UDim2.new(1,-10,1,-40)
@@ -102,7 +102,7 @@ function Library:CreateWindow(cfg)
     Container.ScrollingDirection = Enum.ScrollingDirection.Y
     Container.ScrollBarImageColor3 = Color3.fromRGB(100,100,100)
     Container.VerticalScrollBarInset = Enum.ScrollBarInset.Always
-    Container.TouchScrollSensitivity = 10 -- Cải thiện cảm ứng trên mobile
+    Container.ElasticBehavior = Enum.ElasticBehavior.Always
 
     local Layout = Instance.new("UIListLayout", Container)
     Layout.Padding = UDim.new(0,8)
