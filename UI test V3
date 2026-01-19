@@ -1,5 +1,5 @@
 --// KHANHLY UI LIBRARY - FIXED VERSION
---// GitHub Ready | Correct Scroll | Live Controls | Wave Border | MOBILE SUPPORT | SAVE POSITION
+--// GitHub Ready | Correct Scroll | Live Controls | Wave Border
 
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
@@ -25,17 +25,16 @@ function Library:CreateWindow(cfg)
     ScreenGui.ResetOnSpawn = false
     ScreenGui.Parent = game.CoreGui
 
-    -- Lưu vị trí UI
-    local savedPosition = nil
-    local lastSize = UDim2.new(0, 240, 0, 320)
-    local lastBackgroundTransparency = 0.15
-
+    -- Lưu vị trí gốc
+    local savedPosition = UDim2.new(0, 20, 0.5, -160)
+    local savedSize = UDim2.new(0, 240, 0, 320)
+    
     -- MAIN FRAME
     local Main = Instance.new("Frame", ScreenGui)
-    Main.Size = lastSize
-    Main.Position = UDim2.new(0, 20, 0.5, -160)
+    Main.Size = UDim2.new(0, 240, 0, 320)
+    Main.Position = savedPosition
     Main.BackgroundColor3 = Color3.fromRGB(25,25,25)
-    Main.BackgroundTransparency = lastBackgroundTransparency
+    Main.BackgroundTransparency = 0.15
     Main.Active = true
     Main.Draggable = true
     Main.Visible = false
@@ -54,6 +53,7 @@ function Library:CreateWindow(cfg)
     Gradient.Rotation = 0
     Gradient.Enabled = true
 
+    -- Animation xoay viền
     task.spawn(function()
         while true do
             local tween = TweenService:Create(
@@ -78,7 +78,7 @@ function Library:CreateWindow(cfg)
     Title.TextXAlignment = Enum.TextXAlignment.Center
     Round(Title, 8)
 
-    -- SCROLL CONTAINER
+    -- SCROLL CONTAINER với cải thiện touch
     local Container = Instance.new("ScrollingFrame", Main)
     Container.Position = UDim2.new(0,5,0,35)
     Container.Size = UDim2.new(1,-10,1,-40)
@@ -87,56 +87,62 @@ function Library:CreateWindow(cfg)
     Container.ScrollBarThickness = 6
     Container.BackgroundTransparency = 1
     Container.Active = true
+    Container.AutomaticCanvasSize = Enum.AutomaticSize.None
+    Container.ScrollingDirection = Enum.ScrollingDirection.Y
+    Container.ScrollBarImageColor3 = Color3.fromRGB(100,100,100)
+    Container.VerticalScrollBarInset = Enum.ScrollBarInset.Always
+
+    -- Thêm touch scrolling tốt hơn
     Container.ScrollingEnabled = true
-    Container.ScrollBarImageColor3 = Color3.fromRGB(150,150,150)
-    
-    -- FIX: Dùng pcall để tránh lỗi với các Enum cũ
-    pcall(function()
-        if Enum.ElasticBehavior then
-            Container.ElasticBehavior = Enum.ElasticBehavior.WhenScrollable
-        end
-    end)
-    
-    pcall(function()
-        if Enum.ScrollBarInset then
-            Container.VerticalScrollBarInset = Enum.ScrollBarInset.ScrollBar
-        end
-    end)
+    Container.ElasticBehavior = Enum.ElasticBehavior.WhenScrollable
 
     local Layout = Instance.new("UIListLayout", Container)
     Layout.Padding = UDim.new(0,8)
     Layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 
-    -- Tự động cập nhật canvas size
+    -- Cải thiện update canvas size
+    local function updateCanvasSize()
+        local totalHeight = 0
+        for _, child in ipairs(Container:GetChildren()) do
+            if child:IsA("Frame") or child:IsA("TextButton") then
+                totalHeight = totalHeight + child.AbsoluteSize.Y + Layout.Padding.Offset
+            end
+        end
+        Container.CanvasSize = UDim2.new(0, 0, 0, totalHeight + 10)
+    end
+
     Layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
         Container.CanvasSize = UDim2.new(0,0,0,Layout.AbsoluteContentSize.Y + 10)
     end)
 
-    -- Hỗ trợ vuốt cho Mobile (thủ công)
-    local isScrolling = false
-    local startPos = nil
-    local startScroll = nil
+    -- Thêm touch input handling cho mobile
+    local isDraggingUI = false
+    local lastInputPosition = nil
     
     Container.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.Touch then
-            isScrolling = true
-            startPos = input.Position.Y
-            startScroll = Container.CanvasPosition.Y
+            isDraggingUI = false
+            lastInputPosition = input.Position
+        end
+    end)
+    
+    Container.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.Touch then
+            if not isDraggingUI and lastInputPosition then
+                local delta = (input.Position - lastInputPosition).Y
+                if math.abs(delta) > 5 then -- Ngưỡng nhỏ để phân biệt click và drag
+                    isDraggingUI = true
+                    Main.Draggable = false -- Tạm tắt drag khi đang scroll
+                end
+            end
         end
     end)
     
     Container.InputEnded:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.Touch then
-            isScrolling = false
-            startPos = nil
-            startScroll = nil
-        end
-    end)
-    
-    Container.InputChanged:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.Touch and isScrolling then
-            local delta = startPos - input.Position.Y
-            Container.CanvasPosition = Vector2.new(0, startScroll + delta)
+            isDraggingUI = false
+            Main.Draggable = true -- Bật lại drag khi kết thúc touch
+            lastInputPosition = nil
         end
     end)
 
@@ -163,79 +169,50 @@ function Library:CreateWindow(cfg)
     -- Hiệu ứng ẩn/hiện UI với lưu vị trí
     local uiVisible = false
     
-    local function hideUI()
-        savedPosition = Main.Position
-        lastSize = Main.Size
-        lastBackgroundTransparency = Main.BackgroundTransparency
-        
-        Tween(Main, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-            Size = UDim2.new(0, 0, 0, 0),
-            BackgroundTransparency = 1
-        })
-        wait(0.3)
-        Main.Visible = false
-    end
-    
-    local function showUI()
-        Main.Visible = true
-        
-        if savedPosition then
-            Main.Position = savedPosition
-        else
-            Main.Position = UDim2.new(0, 20, 0.5, -160)
-        end
-        
-        Main.Size = UDim2.new(0, 0, 0, 0)
-        Main.BackgroundTransparency = 1
-        
-        Tween(Main, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-            Size = lastSize,
-            BackgroundTransparency = lastBackgroundTransparency
-        })
-    end
-    
     local function toggleUI()
         if uiVisible then
-            hideUI()
+            -- Lưu vị trí hiện tại trước khi ẩn
+            savedPosition = Main.Position
+            savedSize = Main.Size
+            
+            -- Ẩn UI với hiệu ứng
+            Tween(Main, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                Size = UDim2.new(0, 0, 0, 0),
+                Position = savedPosition,
+                BackgroundTransparency = 1
+            })
+            wait(0.3)
+            Main.Visible = false
         else
-            showUI()
+            -- Hiện UI với hiệu ứng từ vị trí đã lưu
+            Main.Visible = true
+            Main.Size = UDim2.new(0, 0, 0, 0)
+            Main.Position = savedPosition
+            Main.BackgroundTransparency = 1
+            
+            Tween(Main, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+                Size = savedSize,
+                BackgroundTransparency = 0.15
+            })
         end
         uiVisible = not uiVisible
     end
 
     OpenBtn.MouseButton1Click:Connect(toggleUI)
     
-    -- FIX: Sử dụng InputBegan thay vì TouchTap cho mobile
-    OpenBtn.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.Touch then
-            toggleUI()
-        end
-    end)
+    -- Touch support cho open button
+    OpenBtn.TouchTap:Connect(toggleUI)
 
     local Window = {}
 
-    function Window:SavePosition()
-        savedPosition = Main.Position
-    end
-    
-    function Window:SetPosition(position)
-        if position then
-            Main.Position = position
-            savedPosition = position
-        end
-    end
-    
-    function Window:ResetPosition()
-        savedPosition = UDim2.new(0, 20, 0.5, -160)
-        if Main.Visible then
-            Main.Position = savedPosition
-        end
-    end
-
+    -- EDIT OPEN BUTTON
     function Window:EditOpenButton(cfg2)
         if cfg2.Icon then OpenBtn.Image = cfg2.Icon end
         if cfg2.Size then OpenBtn.Size = cfg2.Size end
-        if cfg2.Position then OpenBtn.Position = cfg2.Position end
+        if cfg2.Position then 
+            OpenBtn.Position = cfg2.Position 
+            savedPosition = cfg2.Position
+        end
         if cfg2.BackgroundColor then OpenBtn.BackgroundColor3 = cfg2.BackgroundColor end
         if cfg2.StrokeColor then OBStroke.Color = cfg2.StrokeColor end
     end
@@ -253,8 +230,11 @@ function Library:CreateWindow(cfg)
             btn.TextColor3 = Color3.new(1,1,1)
             btn.BackgroundColor3 = Color3.fromRGB(45,45,45)
             btn.AutoButtonColor = false
+            btn.Active = true
+            btn.Selectable = true
             Round(btn,6)
             
+            -- Thêm hiệu ứng nổi 3D
             local btnShadow = Instance.new("UIStroke", btn)
             btnShadow.Thickness = 1
             btnShadow.Color = Color3.fromRGB(20,20,20)
@@ -266,24 +246,16 @@ function Library:CreateWindow(cfg)
             btnHighlight.Transparency = 0.8
             btnHighlight.LineJoinMode = Enum.LineJoinMode.Round
 
-            local function onActivated()
-                local originalColor = btn.BackgroundColor3
-                Tween(btn, TweenInfo.new(0.1), {BackgroundColor3 = Color3.fromRGB(120,180,255)})
-                wait(0.1)
-                Tween(btn, TweenInfo.new(0.1), {BackgroundColor3 = originalColor})
-                wait(0.1)
-                callback()
+            -- Tạm tắt drag khi tương tác với nút
+            local function disableDrag()
+                Main.Draggable = false
             end
             
-            btn.MouseButton1Click:Connect(onActivated)
-            
-            -- Hỗ trợ mobile tap
-            btn.InputBegan:Connect(function(input)
-                if input.UserInputType == Enum.UserInputType.Touch then
-                    onActivated()
-                end
-            end)
+            local function enableDrag()
+                Main.Draggable = true
+            end
 
+            -- Hiệu ứng hover
             btn.MouseEnter:Connect(function()
                 Tween(btn, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(60,60,60)})
                 Tween(btnShadow, TweenInfo.new(0.2), {Transparency = 0.2})
@@ -294,6 +266,30 @@ function Library:CreateWindow(cfg)
                 Tween(btn, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(45,45,45)})
                 Tween(btnShadow, TweenInfo.new(0.2), {Transparency = 0.5})
                 Tween(btnHighlight, TweenInfo.new(0.2), {Transparency = 0.8})
+                enableDrag()
+            end)
+
+            -- Hiệu ứng click
+            btn.MouseButton1Down:Connect(disableDrag)
+            btn.MouseButton1Up:Connect(enableDrag)
+            
+            btn.MouseButton1Click:Connect(function()
+                local originalColor = btn.BackgroundColor3
+                Tween(btn, TweenInfo.new(0.1), {BackgroundColor3 = Color3.fromRGB(120,180,255)})
+                wait(0.1)
+                Tween(btn, TweenInfo.new(0.1), {BackgroundColor3 = originalColor})
+                wait(0.1)
+                callback()
+            end)
+            
+            -- Touch support
+            btn.TouchTap:Connect(function()
+                local originalColor = btn.BackgroundColor3
+                Tween(btn, TweenInfo.new(0.1), {BackgroundColor3 = Color3.fromRGB(120,180,255)})
+                wait(0.1)
+                Tween(btn, TweenInfo.new(0.1), {BackgroundColor3 = originalColor})
+                wait(0.1)
+                callback()
             end)
         end
 
@@ -319,7 +315,17 @@ function Library:CreateWindow(cfg)
             toggleContainer.BorderSizePixel = 0
             toggleContainer.AutoButtonColor = false
             toggleContainer.Text = ""
+            toggleContainer.Active = true
             Round(toggleContainer,10)
+            
+            -- Tạm tắt drag khi tương tác với toggle
+            toggleContainer.MouseButton1Down:Connect(function()
+                Main.Draggable = false
+            end)
+            
+            toggleContainer.MouseButton1Up:Connect(function()
+                Main.Draggable = true
+            end)
             
             local toggleStroke = Instance.new("UIStroke", toggleContainer)
             toggleStroke.Thickness = 1
@@ -352,19 +358,17 @@ function Library:CreateWindow(cfg)
                 end
             end
 
-            local function onToggle()
+            toggleContainer.MouseButton1Click:Connect(function()
                 state = not state
                 refresh()
                 callback(state)
-            end
+            end)
             
-            toggleContainer.MouseButton1Click:Connect(onToggle)
-            
-            -- Hỗ trợ mobile
-            toggleContainer.InputBegan:Connect(function(input)
-                if input.UserInputType == Enum.UserInputType.Touch then
-                    onToggle()
-                end
+            -- Touch support
+            toggleContainer.TouchTap:Connect(function()
+                state = not state
+                refresh()
+                callback(state)
             end)
 
             refresh()
@@ -391,6 +395,7 @@ function Library:CreateWindow(cfg)
             bar.BorderSizePixel = 0
             bar.AutoButtonColor = false
             bar.Text = ""
+            bar.Active = true
             Round(bar,6)
             
             local barStroke = Instance.new("UIStroke", bar)
@@ -409,12 +414,16 @@ function Library:CreateWindow(cfg)
 
             local dragging = false
             local currentValue = default
+            
+            -- Biến để kiểm tra touch
+            local touchStartPos = nil
+            local touchStartTime = 0
 
-            local function updateSlider(mouseX)
+            local function updateSlider(inputPosition)
                 local absolutePosition = bar.AbsolutePosition
                 local absoluteSize = bar.AbsoluteSize
                 
-                local relativeX = (mouseX - absolutePosition.X) / absoluteSize.X
+                local relativeX = (inputPosition.X - absolutePosition.X) / absoluteSize.X
                 relativeX = math.clamp(relativeX, 0, 1)
                 
                 fill.Size = UDim2.new(relativeX, 0, 1, 0)
@@ -423,38 +432,60 @@ function Library:CreateWindow(cfg)
                 callback(currentValue)
             end
 
-            local function onInputBegan(input)
-                if input.UserInputType == Enum.UserInputType.MouseButton1 or 
-                   input.UserInputType == Enum.UserInputType.Touch then
+            bar.MouseButton1Down:Connect(function()
+                Main.Draggable = false
+                dragging = true
+                Tween(fill, TweenInfo.new(0.1), {BackgroundColor3 = Color3.fromRGB(140,200,255)})
+                Tween(fillStroke, TweenInfo.new(0.1), {Color = Color3.fromRGB(120,180,235)})
+                
+                local mouse = game:GetService("Players").LocalPlayer:GetMouse()
+                updateSlider(Vector2.new(mouse.X, mouse.Y))
+            end)
+            
+            -- Touch input handling
+            bar.InputBegan:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.Touch then
+                    Main.Draggable = false
                     dragging = true
+                    touchStartPos = input.Position
+                    touchStartTime = tick()
+                    
                     Tween(fill, TweenInfo.new(0.1), {BackgroundColor3 = Color3.fromRGB(140,200,255)})
                     Tween(fillStroke, TweenInfo.new(0.1), {Color = Color3.fromRGB(120,180,235)})
                     
-                    local mouse = game:GetService("Players").LocalPlayer:GetMouse()
-                    updateSlider(mouse.X)
+                    updateSlider(input.Position)
                 end
-            end
-            
-            bar.InputBegan:Connect(onInputBegan)
+            end)
             
             local connection
             connection = RunService.RenderStepped:Connect(function()
                 if dragging then
-                    local mouse = game:GetService("Players").LocalPlayer:GetMouse()
-                    updateSlider(mouse.X)
+                    if UserInputService.MouseEnabled then
+                        local mouse = game:GetService("Players").LocalPlayer:GetMouse()
+                        updateSlider(Vector2.new(mouse.X, mouse.Y))
+                    end
+                end
+            end)
+            
+            -- Touch input changed
+            bar.InputChanged:Connect(function(input)
+                if dragging and input.UserInputType == Enum.UserInputType.Touch then
+                    updateSlider(input.Position)
                 end
             end)
             
             UserInputService.InputEnded:Connect(function(input)
-                if input.UserInputType == Enum.UserInputType.MouseButton1 or 
-                   input.UserInputType == Enum.UserInputType.Touch then 
-                    dragging = false
-                    Tween(fill, TweenInfo.new(0.1), {BackgroundColor3 = Color3.fromRGB(120,180,255)})
-                    Tween(fillStroke, TweenInfo.new(0.1), {Color = Color3.fromRGB(100,160,235)})
-                    
-                    if connection then
-                        connection:Disconnect()
-                        connection = nil
+                if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then 
+                    if dragging then
+                        dragging = false
+                        Main.Draggable = true
+                        Tween(fill, TweenInfo.new(0.1), {BackgroundColor3 = Color3.fromRGB(120,180,255)})
+                        Tween(fillStroke, TweenInfo.new(0.1), {Color = Color3.fromRGB(100,160,235)})
+                        
+                        if connection then
+                            connection:Disconnect()
+                            connection = nil
+                        end
                     end
                 end
             end)
