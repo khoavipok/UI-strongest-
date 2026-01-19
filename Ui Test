@@ -1,5 +1,5 @@
---// KHANHLY UI LIBRARY - THEME EDITION
---// GitHub Ready | Correct Scroll | Live Controls | Wave Border | Full Theme
+--// KHANHLY UI LIBRARY - WAVE THEME EDITION
+--// GitHub Ready | Correct Scroll | Live Controls | Wave Border | Full Wave Theme
 
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
@@ -18,6 +18,13 @@ local Theme = {
     MediumGray = Color3.fromRGB(60, 60, 60), -- xám trung
     LightGray = Color3.fromRGB(230, 230, 230), -- xám sáng
     White = Color3.fromRGB(240, 240, 240)    -- trắng
+}
+
+-- GRADIENT SÓNG DÙNG CHUNG
+local WaveGradient = ColorSequence.new{
+    ColorSequenceKeypoint.new(0, Theme.Ruby),     -- đỏ hồng ngọc
+    ColorSequenceKeypoint.new(0.5, Theme.Purple), -- tím
+    ColorSequenceKeypoint.new(1, Theme.Ocean)     -- xanh biển
 }
 
 --================ UTILS =================--
@@ -63,25 +70,20 @@ function Library:CreateWindow(cfg)
     Main.Visible = false
     Round(Main, 8)
 
-    -- VIỀN SÓNG THEME ĐỔI MÀU
+    -- VIỀN SÓNG WAVE GRADIENT
     local Stroke = Instance.new("UIStroke", Main)
     Stroke.Thickness = 2
     Stroke.Color = Theme.Ruby
 
-    local Gradient = Instance.new("UIGradient", Stroke)
-    Gradient.Color = ColorSequence.new{
-        ColorSequenceKeypoint.new(0, Theme.Ruby),     -- Đỏ hồng ngọc
-        ColorSequenceKeypoint.new(0.33, Theme.Purple),-- Tím
-        ColorSequenceKeypoint.new(0.66, Theme.Ocean), -- Xanh biển
-        ColorSequenceKeypoint.new(1, Theme.Ruby)      -- Quay lại đỏ
-    }
-    Gradient.Rotation = 0
-    Gradient.Enabled = true
+    local StrokeGradient = Instance.new("UIGradient", Stroke)
+    StrokeGradient.Color = WaveGradient
+    StrokeGradient.Rotation = 0
+    StrokeGradient.Enabled = true
 
     -- Animation xoay viền sóng
     task.spawn(function()
         while true do
-            Gradient.Rotation = Gradient.Rotation + 1
+            StrokeGradient.Rotation = StrokeGradient.Rotation + 1
             task.wait(0.03)
         end
     end)
@@ -92,7 +94,7 @@ function Library:CreateWindow(cfg)
     Title.Text = cfg.Title or "khanhly beta"
     Title.Font = Enum.Font.GothamBold
     Title.TextSize = 14
-    Title.TextColor3 = Theme.Ruby  -- Chữ màu đỏ hồng ngọc
+    Title.TextColor3 = Theme.Ruby
     Title.BackgroundColor3 = Theme.DarkGray
     Title.TextXAlignment = Enum.TextXAlignment.Center
     Round(Title, 8)
@@ -108,7 +110,7 @@ function Library:CreateWindow(cfg)
     Container.Active = true
     Container.AutomaticCanvasSize = Enum.AutomaticSize.Y
     Container.ScrollingDirection = Enum.ScrollingDirection.Y
-    Container.ScrollBarImageColor3 = Theme.Purple  -- Thanh scroll màu tím
+    Container.ScrollBarImageColor3 = Theme.Purple
     Container.VerticalScrollBarInset = Enum.ScrollBarInset.Always
     Container.ElasticBehavior = Enum.ElasticBehavior.Always
 
@@ -131,11 +133,7 @@ function Library:CreateWindow(cfg)
     OBStroke.Color = Theme.Ruby
 
     local OBGradient = Instance.new("UIGradient", OBStroke)
-    OBGradient.Color = ColorSequence.new{
-        ColorSequenceKeypoint.new(0, Theme.Ruby),
-        ColorSequenceKeypoint.new(0.5, Theme.Purple),
-        ColorSequenceKeypoint.new(1, Theme.Ocean)
-    }
+    OBGradient.Color = WaveGradient
     OBGradient.Rotation = 0
 
     -- Animation xoay viền cho nút mở
@@ -243,11 +241,11 @@ function Library:CreateWindow(cfg)
             -- Stroke cho button với màu theme
             local btnStroke = Instance.new("UIStroke", btn)
             btnStroke.Thickness = 1
-            btnStroke.Color = Theme.Purple  -- Viền tím
+            btnStroke.Color = Theme.Purple
             
             local btnHighlight = Instance.new("UIStroke", btn)
             btnHighlight.Thickness = 1
-            btnHighlight.Color = Theme.Ruby  -- Highlight đỏ hồng
+            btnHighlight.Color = Theme.Ruby
             btnHighlight.Transparency = 0.8
             btnHighlight.LineJoinMode = Enum.LineJoinMode.Round
 
@@ -255,7 +253,7 @@ function Library:CreateWindow(cfg)
             btn.MouseEnter:Connect(function()
                 if uiVisible then
                     Tween(btn, TweenInfo.new(0.2), {BackgroundColor3 = Theme.MediumGray})
-                    Tween(btnStroke, TweenInfo.new(0.2), {Color = Theme.Ocean})  -- Đổi sang xanh khi hover
+                    Tween(btnStroke, TweenInfo.new(0.2), {Color = Theme.Ocean})
                     Tween(btnHighlight, TweenInfo.new(0.2), {Transparency = 0.3})
                 end
             end)
@@ -263,7 +261,7 @@ function Library:CreateWindow(cfg)
             btn.MouseLeave:Connect(function()
                 if uiVisible then
                     Tween(btn, TweenInfo.new(0.2), {BackgroundColor3 = Theme.DarkGray})
-                    Tween(btnStroke, TweenInfo.new(0.2), {Color = Theme.Purple})  -- Về lại tím
+                    Tween(btnStroke, TweenInfo.new(0.2), {Color = Theme.Purple})
                     Tween(btnHighlight, TweenInfo.new(0.2), {Transparency = 0.8})
                 end
             end)
@@ -279,7 +277,7 @@ function Library:CreateWindow(cfg)
                     
                     if IsInputInFrame(btn, input.Position) then
                         isClicking = true
-                        Tween(btn, TweenInfo.new(0.1), {BackgroundColor3 = Theme.Ruby})  -- Đỏ khi click
+                        Tween(btn, TweenInfo.new(0.1), {BackgroundColor3 = Theme.Ruby})
                         Tween(btnStroke, TweenInfo.new(0.1), {Color = Theme.Ruby})
                     end
                 end
@@ -291,7 +289,7 @@ function Library:CreateWindow(cfg)
                     
                     if isClicking then
                         if IsInputInFrame(btn, input.Position) then
-                            Tween(btn, TweenInfo.new(0.1), {BackgroundColor3 = Theme.Ocean})  -- Xanh khi release
+                            Tween(btn, TweenInfo.new(0.1), {BackgroundColor3 = Theme.Ocean})
                             Tween(btnStroke, TweenInfo.new(0.1), {Color = Theme.Ocean})
                             task.wait(0.05)
                             Tween(btn, TweenInfo.new(0.1), {BackgroundColor3 = Theme.DarkGray})
@@ -332,9 +330,15 @@ function Library:CreateWindow(cfg)
             toggleContainer.Active = true
             Round(toggleContainer,10)
             
+            -- Tạo gradient cho toggle nhưng tắt ban đầu
+            local toggleGradient = Instance.new("UIGradient", toggleContainer)
+            toggleGradient.Color = WaveGradient
+            toggleGradient.Rotation = 0
+            toggleGradient.Enabled = false  -- Tắt khi chưa bật toggle
+            
             local toggleStroke = Instance.new("UIStroke", toggleContainer)
             toggleStroke.Thickness = 1
-            toggleStroke.Color = Theme.Purple  -- Viền tím
+            toggleStroke.Color = Theme.Purple
 
             local circle = Instance.new("Frame", toggleContainer)
             circle.Size = UDim2.new(0,16,0,16)
@@ -345,22 +349,34 @@ function Library:CreateWindow(cfg)
             
             local circleStroke = Instance.new("UIStroke", circle)
             circleStroke.Thickness = 1
-            circleStroke.Color = Theme.Ruby  -- Viền đỏ cho circle
+            circleStroke.Color = Theme.Ruby
 
             local state = default or false
 
             local function refresh()
                 if state then
-                    -- ON: Màu xanh biển
-                    Tween(toggleContainer, TweenInfo.new(0.2), {BackgroundColor3 = Theme.Ocean})
-                    Tween(toggleStroke, TweenInfo.new(0.2), {Color = Theme.Ocean})
+                    -- ON: BẬT GRADIENT SÓNG
+                    toggleGradient.Enabled = true
+                    toggleContainer.BackgroundColor3 = Theme.DarkGray
+                    toggleStroke.Color = Theme.Ocean
+                    
+                    -- Animation xoay gradient cho toggle
+                    task.spawn(function()
+                        while state and toggleContainer.Parent do
+                            toggleGradient.Rotation = toggleGradient.Rotation + 1
+                            task.wait(0.03)
+                        end
+                    end)
+                    
                     Tween(circle, TweenInfo.new(0.2), {Position = UDim2.new(1,-18,0.5,-8)})
                     Tween(circle, TweenInfo.new(0.2), {BackgroundColor3 = Theme.White})
                     Tween(circleStroke, TweenInfo.new(0.2), {Color = Theme.White})
                 else
-                    -- OFF: Màu đỏ hồng
-                    Tween(toggleContainer, TweenInfo.new(0.2), {BackgroundColor3 = Theme.DarkGray})
-                    Tween(toggleStroke, TweenInfo.new(0.2), {Color = Theme.Ruby})
+                    -- OFF: TẮT GRADIENT, DÙNG MÀU CỐ ĐỊNH
+                    toggleGradient.Enabled = false
+                    toggleContainer.BackgroundColor3 = Theme.DarkGray
+                    toggleStroke.Color = Theme.Ruby
+                    
                     Tween(circle, TweenInfo.new(0.2), {Position = UDim2.new(0,2,0.5,-8)})
                     Tween(circle, TweenInfo.new(0.2), {BackgroundColor3 = Theme.White})
                     Tween(circleStroke, TweenInfo.new(0.2), {Color = Theme.Ruby})
@@ -395,7 +411,7 @@ function Library:CreateWindow(cfg)
             label.Text = text .. ": " .. default
             label.Font = Enum.Font.Gotham
             label.TextSize = 13
-            label.TextColor3 = Theme.Ocean  -- Màu xanh cho text
+            label.TextColor3 = Theme.Ocean
             label.BackgroundTransparency = 1
             label.TextXAlignment = Enum.TextXAlignment.Left
 
@@ -411,17 +427,31 @@ function Library:CreateWindow(cfg)
             
             local barStroke = Instance.new("UIStroke", bar)
             barStroke.Thickness = 1
-            barStroke.Color = Theme.Purple  -- Viền tím
+            barStroke.Color = Theme.Purple
 
             local fill = Instance.new("Frame", bar)
             fill.Size = UDim2.new((default-min)/(max-min),0,1,0)
-            fill.BackgroundColor3 = Theme.Ocean  -- Fill xanh biển
+            fill.BackgroundColor3 = Theme.Ocean
             fill.BorderSizePixel = 0
             Round(fill,6)
             
+            -- TẠO GRADIENT SÓNG CHO SLIDER FILL
+            local fillGradient = Instance.new("UIGradient", fill)
+            fillGradient.Color = WaveGradient
+            fillGradient.Rotation = 0
+            fillGradient.Enabled = true
+            
             local fillStroke = Instance.new("UIStroke", fill)
             fillStroke.Thickness = 1
-            fillStroke.Color = Theme.Ruby  -- Viền đỏ cho fill
+            fillStroke.Color = Theme.Ruby
+
+            -- Animation xoay gradient cho slider fill
+            task.spawn(function()
+                while fill.Parent do
+                    fillGradient.Rotation = fillGradient.Rotation + 1
+                    task.wait(0.03)
+                end
+            end)
 
             -- Biến cho slider (CHUẨN CHO CẢ PC VÀ MOBILE)
             local dragging = false
@@ -455,7 +485,7 @@ function Library:CreateWindow(cfg)
                     if IsInputInFrame(bar, input.Position) then
                         dragging = true
                         activeInput = input
-                        Tween(fill, TweenInfo.new(0.1), {BackgroundColor3 = Theme.Ruby})  -- Đỏ khi đang kéo
+                        Tween(fill, TweenInfo.new(0.1), {BackgroundColor3 = Theme.Ruby})
                         Tween(fillStroke, TweenInfo.new(0.1), {Color = Theme.Ruby})
                         updateSliderFromInput(input)
                     end
@@ -466,7 +496,7 @@ function Library:CreateWindow(cfg)
                 if input == activeInput then
                     dragging = false
                     activeInput = nil
-                    Tween(fill, TweenInfo.new(0.1), {BackgroundColor3 = Theme.Ocean})  -- Về xanh khi thả
+                    Tween(fill, TweenInfo.new(0.1), {BackgroundColor3 = Theme.Ocean})
                     Tween(fillStroke, TweenInfo.new(0.1), {Color = Theme.Ruby})
                 end
             end)
@@ -480,13 +510,13 @@ function Library:CreateWindow(cfg)
             -- Hiệu ứng hover chỉ cho PC
             bar.MouseEnter:Connect(function()
                 if uiVisible then
-                    Tween(barStroke, TweenInfo.new(0.2), {Color = Theme.Ocean})  -- Xanh khi hover
+                    Tween(barStroke, TweenInfo.new(0.2), {Color = Theme.Ocean})
                 end
             end)
             
             bar.MouseLeave:Connect(function()
                 if uiVisible and not dragging then
-                    Tween(barStroke, TweenInfo.new(0.2), {Color = Theme.Purple})  -- Về tím
+                    Tween(barStroke, TweenInfo.new(0.2), {Color = Theme.Purple})
                 end
             end)
         end
