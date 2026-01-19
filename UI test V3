@@ -4,6 +4,8 @@
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
 
 local Library = {}
 
@@ -18,6 +20,14 @@ local function Tween(obj, info, props)
     local tween = TweenService:Create(obj, info, props)
     tween:Play()
     return tween
+end
+
+-- Hàm kiểm tra chuột có nằm trong frame không
+local function IsMouseInFrame(frame, mousePos)
+    local pos = frame.AbsolutePosition
+    local size = frame.AbsoluteSize
+    return mousePos.X >= pos.X and mousePos.X <= pos.X + size.X and
+           mousePos.Y >= pos.Y and mousePos.Y <= pos.Y + size.Y
 end
 
 --================ WINDOW =================--
@@ -39,7 +49,7 @@ function Library:CreateWindow(cfg)
     Main.BackgroundTransparency = 0.15
     Main.Active = true
     Main.Draggable = true
-    Main.Visible = false -- Ẩn ban đầu
+    Main.Visible = false
     Round(Main, 8)
 
     -- STROKE + GRADIENT SÓNG
@@ -118,7 +128,7 @@ function Library:CreateWindow(cfg)
         ColorSequenceKeypoint.new(1, Color3.fromRGB(160,90,255))
     }
 
-    -- Hiệu ứng ẩn/hiện UI FIXED
+    -- Hiệu ứng ẩn/hiện UI
     local uiVisible = false
     local isAnimating = false
     
@@ -205,24 +215,20 @@ function Library:CreateWindow(cfg)
             btn.BackgroundColor3 = Color3.fromRGB(45,45,45)
             btn.AutoButtonColor = false
             btn.Active = true
-            btn.ZIndex = 2
             Round(btn,6)
             
-            -- Thêm hiệu ứng nổi 3D
             local btnShadow = Instance.new("UIStroke", btn)
             btnShadow.Thickness = 1
             btnShadow.Color = Color3.fromRGB(20,20,20)
             btnShadow.Transparency = 0.5
-            btnShadow.ZIndex = 2
             
             local btnHighlight = Instance.new("UIStroke", btn)
             btnHighlight.Thickness = 1
             btnHighlight.Color = Color3.fromRGB(100,100,100)
             btnHighlight.Transparency = 0.8
             btnHighlight.LineJoinMode = Enum.LineJoinMode.Round
-            btnHighlight.ZIndex = 2
 
-            -- Hiệu ứng hover FIXED
+            -- Hiệu ứng hover
             btn.MouseEnter:Connect(function()
                 if uiVisible then
                     Tween(btn, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(60,60,60)})
@@ -239,15 +245,31 @@ function Library:CreateWindow(cfg)
                 end
             end)
 
-            -- Hiệu ứng click FIXED
-            btn.MouseButton1Click:Connect(function()
-                if uiVisible then
-                    local originalColor = btn.BackgroundColor3
-                    Tween(btn, TweenInfo.new(0.1), {BackgroundColor3 = Color3.fromRGB(120,180,255)})
-                    task.wait(0.1)
-                    Tween(btn, TweenInfo.new(0.1), {BackgroundColor3 = originalColor})
-                    task.wait(0.1)
-                    callback()
+            -- Hiệu ứng click - CHỈ CLICK KHI CHUỘT TRONG BTN
+            local isClickingButton = false
+            local clickStartPosition
+            
+            btn.InputBegan:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 and uiVisible then
+                    if IsMouseInFrame(btn, input.Position) then
+                        isClickingButton = true
+                        clickStartPosition = input.Position
+                        Tween(btn, TweenInfo.new(0.1), {BackgroundColor3 = Color3.fromRGB(100,160,230)})
+                    end
+                end
+            end)
+            
+            btn.InputEnded:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 and isClickingButton then
+                    if IsMouseInFrame(btn, input.Position) then
+                        Tween(btn, TweenInfo.new(0.1), {BackgroundColor3 = Color3.fromRGB(120,180,255)})
+                        task.wait(0.05)
+                        Tween(btn, TweenInfo.new(0.1), {BackgroundColor3 = Color3.fromRGB(45,45,45)})
+                        callback()
+                    else
+                        Tween(btn, TweenInfo.new(0.1), {BackgroundColor3 = Color3.fromRGB(45,45,45)})
+                    end
+                    isClickingButton = false
                 end
             end)
         end
@@ -256,7 +278,6 @@ function Library:CreateWindow(cfg)
             local holder = Instance.new("Frame", Container)
             holder.Size = UDim2.new(0.95, 0, 0, 34)
             holder.BackgroundTransparency = 1
-            holder.ZIndex = 2
 
             local label = Instance.new("TextLabel", holder)
             label.Size = UDim2.new(0.7,0,1,0)
@@ -267,7 +288,6 @@ function Library:CreateWindow(cfg)
             label.TextColor3 = Color3.fromRGB(230,230,230)
             label.BackgroundTransparency = 1
             label.TextXAlignment = Enum.TextXAlignment.Left
-            label.ZIndex = 2
 
             local toggleContainer = Instance.new("TextButton", holder)
             toggleContainer.Size = UDim2.new(0,46,0,20)
@@ -276,27 +296,23 @@ function Library:CreateWindow(cfg)
             toggleContainer.BorderSizePixel = 0
             toggleContainer.AutoButtonColor = false
             toggleContainer.Text = ""
-            toggleContainer.ZIndex = 2
             toggleContainer.Active = true
             Round(toggleContainer,10)
             
             local toggleStroke = Instance.new("UIStroke", toggleContainer)
             toggleStroke.Thickness = 1
             toggleStroke.Color = Color3.fromRGB(50,50,50)
-            toggleStroke.ZIndex = 2
 
             local circle = Instance.new("Frame", toggleContainer)
             circle.Size = UDim2.new(0,16,0,16)
             circle.Position = UDim2.new(0,2,0.5,-8)
             circle.BackgroundColor3 = Color3.fromRGB(220,220,220)
             circle.BorderSizePixel = 0
-            circle.ZIndex = 3
             Round(circle,8)
             
             local circleStroke = Instance.new("UIStroke", circle)
             circleStroke.Thickness = 1
             circleStroke.Color = Color3.fromRGB(180,180,180)
-            circleStroke.ZIndex = 3
 
             local state = default or false
 
@@ -314,11 +330,25 @@ function Library:CreateWindow(cfg)
                 end
             end
 
-            toggleContainer.MouseButton1Click:Connect(function()
-                if uiVisible then
-                    state = not state
-                    refresh()
-                    callback(state)
+            -- Toggle chỉ hoạt động khi click bắt đầu trong toggleContainer
+            local isClickingToggle = false
+            
+            toggleContainer.InputBegan:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 and uiVisible then
+                    if IsMouseInFrame(toggleContainer, input.Position) then
+                        isClickingToggle = true
+                    end
+                end
+            end)
+            
+            toggleContainer.InputEnded:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 and isClickingToggle then
+                    if IsMouseInFrame(toggleContainer, input.Position) then
+                        state = not state
+                        refresh()
+                        callback(state)
+                    end
+                    isClickingToggle = false
                 end
             end)
 
@@ -329,7 +359,6 @@ function Library:CreateWindow(cfg)
             local holder = Instance.new("Frame", Container)
             holder.Size = UDim2.new(0.95, 0, 0, 60)
             holder.BackgroundTransparency = 1
-            holder.ZIndex = 2
 
             local label = Instance.new("TextLabel", holder)
             label.Size = UDim2.new(1,0,0,20)
@@ -339,7 +368,6 @@ function Library:CreateWindow(cfg)
             label.TextColor3 = Color3.fromRGB(200,220,255)
             label.BackgroundTransparency = 1
             label.TextXAlignment = Enum.TextXAlignment.Left
-            label.ZIndex = 2
 
             local bar = Instance.new("TextButton", holder)
             bar.Position = UDim2.new(0,0,0,28)
@@ -348,38 +376,35 @@ function Library:CreateWindow(cfg)
             bar.BorderSizePixel = 0
             bar.AutoButtonColor = false
             bar.Text = ""
-            bar.ZIndex = 2
             bar.Active = true
             Round(bar,6)
             
             local barStroke = Instance.new("UIStroke", bar)
             barStroke.Thickness = 1
             barStroke.Color = Color3.fromRGB(40,40,40)
-            barStroke.ZIndex = 2
 
             local fill = Instance.new("Frame", bar)
             fill.Size = UDim2.new((default-min)/(max-min),0,1,0)
             fill.BackgroundColor3 = Color3.fromRGB(120,180,255)
             fill.BorderSizePixel = 0
-            fill.ZIndex = 3
             Round(fill,6)
             
             local fillStroke = Instance.new("UIStroke", fill)
             fillStroke.Thickness = 1
             fillStroke.Color = Color3.fromRGB(100,160,235)
-            fillStroke.ZIndex = 3
 
             local dragging = false
             local currentValue = default
-            local connection
 
-            local function updateSlider(mouseX)
+            local function updateSliderFromInput(input)
                 if not uiVisible then return end
+                if not dragging then return end
                 
-                local absolutePosition = bar.AbsolutePosition
-                local absoluteSize = bar.AbsoluteSize
+                local absPos = bar.AbsolutePosition
+                local absSize = bar.AbsoluteSize
+                local mouseX = input.Position.X
                 
-                local relativeX = (mouseX - absolutePosition.X) / absoluteSize.X
+                local relativeX = (mouseX - absPos.X) / absSize.X
                 relativeX = math.clamp(relativeX, 0, 1)
                 
                 fill.Size = UDim2.new(relativeX, 0, 1, 0)
@@ -388,40 +413,31 @@ function Library:CreateWindow(cfg)
                 callback(currentValue)
             end
 
-            bar.MouseButton1Down:Connect(function()
-                if uiVisible then
-                    dragging = true
-                    Tween(fill, TweenInfo.new(0.1), {BackgroundColor3 = Color3.fromRGB(140,200,255)})
-                    Tween(fillStroke, TweenInfo.new(0.1), {Color = Color3.fromRGB(120,180,235)})
-                    
-                    local mouse = game:GetService("Players").LocalPlayer:GetMouse()
-                    updateSlider(mouse.X)
-                    
-                    if connection then
-                        connection:Disconnect()
+            -- Input handling đúng chuẩn
+            bar.InputBegan:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 and uiVisible then
+                    if IsMouseInFrame(bar, input.Position) then
+                        dragging = true
+                        Tween(fill, TweenInfo.new(0.1), {BackgroundColor3 = Color3.fromRGB(140,200,255)})
+                        Tween(fillStroke, TweenInfo.new(0.1), {Color = Color3.fromRGB(120,180,235)})
+                        updateSliderFromInput(input)
                     end
-                    
-                    connection = RunService.RenderStepped:Connect(function()
-                        if dragging and uiVisible then
-                            local mouse = game:GetService("Players").LocalPlayer:GetMouse()
-                            updateSlider(mouse.X)
-                        end
-                    end)
                 end
             end)
             
-            UserInputService.InputEnded:Connect(function(input)
-                if input.UserInputType == Enum.UserInputType.MouseButton1 then 
+            bar.InputEnded:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 then
                     if dragging then
                         dragging = false
                         Tween(fill, TweenInfo.new(0.1), {BackgroundColor3 = Color3.fromRGB(120,180,255)})
                         Tween(fillStroke, TweenInfo.new(0.1), {Color = Color3.fromRGB(100,160,235)})
-                        
-                        if connection then
-                            connection:Disconnect()
-                            connection = nil
-                        end
                     end
+                end
+            end)
+            
+            UserInputService.InputChanged:Connect(function(input)
+                if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+                    updateSliderFromInput(input)
                 end
             end)
             
