@@ -1,5 +1,5 @@
---// KHANHLY UI LIBRARY - WAVE THEME EDITION
---// GitHub Ready | Correct Scroll | Live Controls | Wave Border | Full Wave Theme
+--// KHANHLY UI LIBRARY - RUBY RED TOGGLE
+--// GitHub Ready | Correct Scroll | Live Controls | Wave Border | Ruby Theme
 
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
@@ -45,6 +45,7 @@ end
 --================ THEME =================--
 local Theme = {
     Ruby = Color3.fromRGB(255, 70, 120),     -- đỏ hồng ngọc
+    RubyRed = Color3.fromRGB(220, 40, 90),   -- đỏ hồng ngọc đậm hơn
     Purple = Color3.fromRGB(170, 90, 255),   -- tím
     Ocean = Color3.fromRGB(0, 160, 220),     -- xanh biển
     Dark = Color3.fromRGB(25, 25, 25),       -- nền tối
@@ -343,12 +344,7 @@ function Library:CreateWindow(cfg)
             toggleContainer.Active = true
             Round(toggleContainer,10)
             
-            -- Tạo gradient cho toggle nhưng tắt ban đầu
-            local toggleGradient = Instance.new("UIGradient", toggleContainer)
-            toggleGradient.Color = WaveGradient
-            toggleGradient.Rotation = 0
-            toggleGradient.Enabled = false  -- Tắt khi chưa bật toggle
-            
+            -- Viền cho toggle
             local toggleStroke = Instance.new("UIStroke", toggleContainer)
             toggleStroke.Thickness = 1
             toggleStroke.Color = Theme.Ruby
@@ -365,43 +361,19 @@ function Library:CreateWindow(cfg)
             circleStroke.Color = Theme.Ruby
 
             local state = default or false
-            
-            -- Biến để kiểm soát animation
-            local gradientAnimation
-            local isAnimatingGradient = false
 
             local function refresh()
                 if state then
-                    -- ON: BẬT GRADIENT SÓNG
-                    toggleGradient.Enabled = true
-                    toggleStroke.Color = Color3.new(1, 1, 1)  -- Viền trắng khi bật
-                    
-                    -- Animation xoay gradient cho toggle
-                    if not isAnimatingGradient then
-                        isAnimatingGradient = true
-                        gradientAnimation = task.spawn(function()
-                            while isAnimatingGradient and toggleContainer and toggleContainer.Parent do
-                                toggleGradient.Rotation = toggleGradient.Rotation + 1
-                                task.wait(0.03)
-                            end
-                        end)
-                    end
-                    
+                    -- ON: ĐỎ HỒNG NGỌC
+                    Tween(toggleContainer, TweenInfo.new(0.2), {BackgroundColor3 = Theme.RubyRed})
+                    Tween(toggleStroke, TweenInfo.new(0.2), {Color = Theme.RubyRed})
                     Tween(circle, TweenInfo.new(0.2), {Position = UDim2.new(1,-18,0.5,-8)})
                     Tween(circle, TweenInfo.new(0.2), {BackgroundColor3 = Theme.White})
                     Tween(circleStroke, TweenInfo.new(0.2), {Color = Theme.White})
                 else
-                    -- OFF: TẮT GRADIENT, DÙNG MÀU CỐ ĐỊNH
-                    toggleGradient.Enabled = false
-                    toggleStroke.Color = Theme.Ruby
-                    
-                    -- Dừng animation gradient
-                    isAnimatingGradient = false
-                    if gradientAnimation then
-                        task.cancel(gradientAnimation)
-                        gradientAnimation = nil
-                    end
-                    
+                    -- OFF: XÁM
+                    Tween(toggleContainer, TweenInfo.new(0.2), {BackgroundColor3 = Theme.DarkGray})
+                    Tween(toggleStroke, TweenInfo.new(0.2), {Color = Theme.Ruby})
                     Tween(circle, TweenInfo.new(0.2), {Position = UDim2.new(0,2,0.5,-8)})
                     Tween(circle, TweenInfo.new(0.2), {BackgroundColor3 = Theme.White})
                     Tween(circleStroke, TweenInfo.new(0.2), {Color = Theme.Ruby})
