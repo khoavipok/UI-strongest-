@@ -1,11 +1,24 @@
---// KHANHLY UI LIBRARY - FIXED VERSION
---// GitHub Ready | Correct Scroll | Live Controls | Wave Border
+--// KHANHLY UI LIBRARY - THEME EDITION
+--// GitHub Ready | Correct Scroll | Live Controls | Wave Border | Full Theme
 
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
+local Players = game:GetService("Players")
 
 local Library = {}
+
+--================ THEME =================--
+local Theme = {
+    Ruby = Color3.fromRGB(255, 70, 120),     -- đỏ hồng ngọc
+    Purple = Color3.fromRGB(170, 90, 255),   -- tím
+    Ocean = Color3.fromRGB(0, 160, 220),     -- xanh biển
+    Dark = Color3.fromRGB(25, 25, 25),       -- nền tối
+    DarkGray = Color3.fromRGB(45, 45, 45),   -- xám đậm
+    MediumGray = Color3.fromRGB(60, 60, 60), -- xám trung
+    LightGray = Color3.fromRGB(230, 230, 230), -- xám sáng
+    White = Color3.fromRGB(240, 240, 240)    -- trắng
+}
 
 --================ UTILS =================--
 local function Round(obj, r)
@@ -15,7 +28,17 @@ local function Round(obj, r)
 end
 
 local function Tween(obj, info, props)
-    TweenService:Create(obj, info, props):Play()
+    local tween = TweenService:Create(obj, info, props)
+    tween:Play()
+    return tween
+end
+
+-- Hàm kiểm tra input có nằm trong frame không (PC + Mobile)
+local function IsInputInFrame(frame, inputPosition)
+    local pos = frame.AbsolutePosition
+    local size = frame.AbsoluteSize
+    return inputPosition.X >= pos.X and inputPosition.X <= pos.X + size.X and
+           inputPosition.Y >= pos.Y and inputPosition.Y <= pos.Y + size.Y
 end
 
 --================ WINDOW =================--
@@ -25,52 +48,52 @@ function Library:CreateWindow(cfg)
     ScreenGui.ResetOnSpawn = false
     ScreenGui.Parent = game.CoreGui
 
+    -- Lưu vị trí và kích thước gốc
+    local savedPosition = UDim2.new(0, 20, 0.5, -160)
+    local savedSize = UDim2.new(0, 240, 0, 320)
+    
     -- MAIN FRAME
     local Main = Instance.new("Frame", ScreenGui)
-    Main.Size = UDim2.new(0, 240, 0, 320)
-    Main.Position = UDim2.new(0, 20, 0.5, -160)
-    Main.BackgroundColor3 = Color3.fromRGB(25,25,25)
+    Main.Size = savedSize
+    Main.Position = savedPosition
+    Main.BackgroundColor3 = Theme.Dark
     Main.BackgroundTransparency = 0.15
     Main.Active = true
     Main.Draggable = true
-    Main.Visible = false -- Ẩn ban đầu
+    Main.Visible = false
     Round(Main, 8)
 
-    -- STROKE + GRADIENT SÓNG
+    -- VIỀN SÓNG THEME ĐỔI MÀU
     local Stroke = Instance.new("UIStroke", Main)
     Stroke.Thickness = 2
-    Stroke.Color = Color3.fromRGB(120,180,255) -- Màu viền mặc định
+    Stroke.Color = Theme.Ruby
 
     local Gradient = Instance.new("UIGradient", Stroke)
     Gradient.Color = ColorSequence.new{
-        ColorSequenceKeypoint.new(0, Color3.fromRGB(80,180,255)),
-        ColorSequenceKeypoint.new(1, Color3.fromRGB(160,90,255))
+        ColorSequenceKeypoint.new(0, Theme.Ruby),     -- Đỏ hồng ngọc
+        ColorSequenceKeypoint.new(0.33, Theme.Purple),-- Tím
+        ColorSequenceKeypoint.new(0.66, Theme.Ocean), -- Xanh biển
+        ColorSequenceKeypoint.new(1, Theme.Ruby)      -- Quay lại đỏ
     }
     Gradient.Rotation = 0
     Gradient.Enabled = true
 
-    -- Animation xoay viền
+    -- Animation xoay viền sóng
     task.spawn(function()
         while true do
-            local tween = TweenService:Create(
-                Gradient,
-                TweenInfo.new(4, Enum.EasingStyle.Linear),
-                {Rotation = 360}
-            )
-            tween:Play()
-            tween.Completed:Wait()
-            Gradient.Rotation = 0
+            Gradient.Rotation = Gradient.Rotation + 1
+            task.wait(0.03)
         end
     end)
 
-    -- TITLE
+    -- TITLE - MÀU RUBY
     local Title = Instance.new("TextLabel", Main)
     Title.Size = UDim2.new(1,0,0,30)
     Title.Text = cfg.Title or "khanhly beta"
     Title.Font = Enum.Font.GothamBold
     Title.TextSize = 14
-    Title.TextColor3 = Color3.fromRGB(230,230,230)
-    Title.BackgroundColor3 = Color3.fromRGB(45,45,45)
+    Title.TextColor3 = Theme.Ruby  -- Chữ màu đỏ hồng ngọc
+    Title.BackgroundColor3 = Theme.DarkGray
     Title.TextXAlignment = Enum.TextXAlignment.Center
     Round(Title, 8)
 
@@ -83,22 +106,21 @@ function Library:CreateWindow(cfg)
     Container.ScrollBarThickness = 6
     Container.BackgroundTransparency = 1
     Container.Active = true
-    Container.AutomaticCanvasSize = Enum.AutomaticSize.None
+    Container.AutomaticCanvasSize = Enum.AutomaticSize.Y
     Container.ScrollingDirection = Enum.ScrollingDirection.Y
+    Container.ScrollBarImageColor3 = Theme.Purple  -- Thanh scroll màu tím
+    Container.VerticalScrollBarInset = Enum.ScrollBarInset.Always
+    Container.ElasticBehavior = Enum.ElasticBehavior.Always
 
     local Layout = Instance.new("UIListLayout", Container)
     Layout.Padding = UDim.new(0,8)
     Layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 
-    Layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-        Container.CanvasSize = UDim2.new(0,0,0,Layout.AbsoluteContentSize.Y + 10)
-    end)
-
-    -- OPEN BUTTON
+    -- OPEN BUTTON VỚI VIỀN SÓNG
     local OpenBtn = Instance.new("ImageButton", ScreenGui)
     OpenBtn.Size = UDim2.new(0,44,0,44)
     OpenBtn.Position = UDim2.new(0,20,0.5,-22)
-    OpenBtn.BackgroundColor3 = Color3.fromRGB(35,35,35)
+    OpenBtn.BackgroundColor3 = Theme.DarkGray
     OpenBtn.AutoButtonColor = false
     OpenBtn.Active = true
     OpenBtn.Draggable = true
@@ -106,42 +128,88 @@ function Library:CreateWindow(cfg)
 
     local OBStroke = Instance.new("UIStroke", OpenBtn)
     OBStroke.Thickness = 2
-    OBStroke.Color = Color3.fromRGB(120,180,255)
+    OBStroke.Color = Theme.Ruby
 
-    local OpenBtnGradient = Instance.new("UIGradient", OpenBtn)
-    OpenBtnGradient.Color = ColorSequence.new{
-        ColorSequenceKeypoint.new(0, Color3.fromRGB(80,180,255)),
-        ColorSequenceKeypoint.new(1, Color3.fromRGB(160,90,255))
+    local OBGradient = Instance.new("UIGradient", OBStroke)
+    OBGradient.Color = ColorSequence.new{
+        ColorSequenceKeypoint.new(0, Theme.Ruby),
+        ColorSequenceKeypoint.new(0.5, Theme.Purple),
+        ColorSequenceKeypoint.new(1, Theme.Ocean)
     }
+    OBGradient.Rotation = 0
+
+    -- Animation xoay viền cho nút mở
+    task.spawn(function()
+        while true do
+            OBGradient.Rotation = OBGradient.Rotation + 1
+            task.wait(0.03)
+        end
+    end)
 
     -- Hiệu ứng ẩn/hiện UI
     local uiVisible = false
+    local isAnimating = false
+    
     local function toggleUI()
+        if isAnimating then return end
+        isAnimating = true
+        
         if uiVisible then
-            -- Ẩn UI với hiệu ứng
-            Tween(Main, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+            -- Lưu vị trí hiện tại trước khi ẩn
+            savedPosition = Main.Position
+            savedSize = Main.Size
+            
+            -- Ẩn UI với hiệu ứng thu nhỏ
+            local hideTween = TweenService:Create(Main, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
                 Size = UDim2.new(0, 0, 0, 0),
-                Position = UDim2.new(0, 20, 0.5, -160),
+                Position = UDim2.new(
+                    savedPosition.X.Scale, 
+                    savedPosition.X.Offset + savedSize.X.Offset/2,
+                    savedPosition.Y.Scale,
+                    savedPosition.Y.Offset + savedSize.Y.Offset/2
+                ),
                 BackgroundTransparency = 1
             })
-            wait(0.3)
-            Main.Visible = false
+            
+            hideTween.Completed:Connect(function()
+                Main.Visible = false
+                isAnimating = false
+            end)
+            
+            hideTween:Play()
         else
-            -- Hiện UI với hiệu ứng
+            -- Hiện UI với hiệu ứng phóng to từ tâm
             Main.Visible = true
             Main.Size = UDim2.new(0, 0, 0, 0)
-            Main.Position = UDim2.new(0, 20, 0.5, -160)
+            Main.Position = UDim2.new(
+                savedPosition.X.Scale, 
+                savedPosition.X.Offset + savedSize.X.Offset/2,
+                savedPosition.Y.Scale,
+                savedPosition.Y.Offset + savedSize.Y.Offset/2
+            )
             Main.BackgroundTransparency = 1
             
-            Tween(Main, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-                Size = UDim2.new(0, 240, 0, 320),
+            local showTween = TweenService:Create(Main, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+                Size = savedSize,
+                Position = savedPosition,
                 BackgroundTransparency = 0.15
             })
+            
+            showTween.Completed:Connect(function()
+                isAnimating = false
+            end)
+            
+            showTween:Play()
         end
         uiVisible = not uiVisible
     end
 
-    OpenBtn.MouseButton1Click:Connect(toggleUI)
+    -- Xử lý cả PC và Mobile cho Open Button
+    OpenBtn.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            toggleUI()
+        end
+    end)
 
     local Window = {}
 
@@ -149,7 +217,9 @@ function Library:CreateWindow(cfg)
     function Window:EditOpenButton(cfg2)
         if cfg2.Icon then OpenBtn.Image = cfg2.Icon end
         if cfg2.Size then OpenBtn.Size = cfg2.Size end
-        if cfg2.Position then OpenBtn.Position = cfg2.Position end
+        if cfg2.Position then 
+            OpenBtn.Position = cfg2.Position 
+        end
         if cfg2.BackgroundColor then OpenBtn.BackgroundColor3 = cfg2.BackgroundColor end
         if cfg2.StrokeColor then OBStroke.Color = cfg2.StrokeColor end
     end
@@ -164,44 +234,76 @@ function Library:CreateWindow(cfg)
             btn.Text = text
             btn.Font = Enum.Font.Gotham
             btn.TextSize = 13
-            btn.TextColor3 = Color3.new(1,1,1)
-            btn.BackgroundColor3 = Color3.fromRGB(45,45,45)
+            btn.TextColor3 = Theme.White
+            btn.BackgroundColor3 = Theme.DarkGray
             btn.AutoButtonColor = false
+            btn.Active = true
             Round(btn,6)
             
-            -- Thêm hiệu ứng nổi 3D
-            local btnShadow = Instance.new("UIStroke", btn)
-            btnShadow.Thickness = 1
-            btnShadow.Color = Color3.fromRGB(20,20,20)
-            btnShadow.Transparency = 0.5
+            -- Stroke cho button với màu theme
+            local btnStroke = Instance.new("UIStroke", btn)
+            btnStroke.Thickness = 1
+            btnStroke.Color = Theme.Purple  -- Viền tím
             
             local btnHighlight = Instance.new("UIStroke", btn)
             btnHighlight.Thickness = 1
-            btnHighlight.Color = Color3.fromRGB(100,100,100)
+            btnHighlight.Color = Theme.Ruby  -- Highlight đỏ hồng
             btnHighlight.Transparency = 0.8
             btnHighlight.LineJoinMode = Enum.LineJoinMode.Round
 
-            -- Hiệu ứng hover
+            -- Hiệu ứng hover (chỉ PC)
             btn.MouseEnter:Connect(function()
-                Tween(btn, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(60,60,60)})
-                Tween(btnShadow, TweenInfo.new(0.2), {Transparency = 0.2})
-                Tween(btnHighlight, TweenInfo.new(0.2), {Transparency = 0.3})
+                if uiVisible then
+                    Tween(btn, TweenInfo.new(0.2), {BackgroundColor3 = Theme.MediumGray})
+                    Tween(btnStroke, TweenInfo.new(0.2), {Color = Theme.Ocean})  -- Đổi sang xanh khi hover
+                    Tween(btnHighlight, TweenInfo.new(0.2), {Transparency = 0.3})
+                end
             end)
             
             btn.MouseLeave:Connect(function()
-                Tween(btn, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(45,45,45)})
-                Tween(btnShadow, TweenInfo.new(0.2), {Transparency = 0.5})
-                Tween(btnHighlight, TweenInfo.new(0.2), {Transparency = 0.8})
+                if uiVisible then
+                    Tween(btn, TweenInfo.new(0.2), {BackgroundColor3 = Theme.DarkGray})
+                    Tween(btnStroke, TweenInfo.new(0.2), {Color = Theme.Purple})  -- Về lại tím
+                    Tween(btnHighlight, TweenInfo.new(0.2), {Transparency = 0.8})
+                end
             end)
 
-            -- Hiệu ứng click (loé sáng)
-            btn.MouseButton1Click:Connect(function()
-                local originalColor = btn.BackgroundColor3
-                Tween(btn, TweenInfo.new(0.1), {BackgroundColor3 = Color3.fromRGB(120,180,255)})
-                wait(0.1)
-                Tween(btn, TweenInfo.new(0.1), {BackgroundColor3 = originalColor})
-                wait(0.1)
-                callback()
+            -- Xử lý click/touch CHUẨN
+            local isClicking = false
+            
+            btn.InputBegan:Connect(function(input)
+                if not uiVisible then return end
+                
+                if input.UserInputType == Enum.UserInputType.MouseButton1 or 
+                   input.UserInputType == Enum.UserInputType.Touch then
+                    
+                    if IsInputInFrame(btn, input.Position) then
+                        isClicking = true
+                        Tween(btn, TweenInfo.new(0.1), {BackgroundColor3 = Theme.Ruby})  -- Đỏ khi click
+                        Tween(btnStroke, TweenInfo.new(0.1), {Color = Theme.Ruby})
+                    end
+                end
+            end)
+            
+            btn.InputEnded:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 or 
+                   input.UserInputType == Enum.UserInputType.Touch then
+                    
+                    if isClicking then
+                        if IsInputInFrame(btn, input.Position) then
+                            Tween(btn, TweenInfo.new(0.1), {BackgroundColor3 = Theme.Ocean})  -- Xanh khi release
+                            Tween(btnStroke, TweenInfo.new(0.1), {Color = Theme.Ocean})
+                            task.wait(0.05)
+                            Tween(btn, TweenInfo.new(0.1), {BackgroundColor3 = Theme.DarkGray})
+                            Tween(btnStroke, TweenInfo.new(0.1), {Color = Theme.Purple})
+                            callback()
+                        else
+                            Tween(btn, TweenInfo.new(0.1), {BackgroundColor3 = Theme.DarkGray})
+                            Tween(btnStroke, TweenInfo.new(0.1), {Color = Theme.Purple})
+                        end
+                        isClicking = false
+                    end
+                end
             end)
         end
 
@@ -216,56 +318,68 @@ function Library:CreateWindow(cfg)
             label.Text = text
             label.Font = Enum.Font.Gotham
             label.TextSize = 13
-            label.TextColor3 = Color3.fromRGB(230,230,230)
+            label.TextColor3 = Theme.LightGray
             label.BackgroundTransparency = 1
             label.TextXAlignment = Enum.TextXAlignment.Left
 
-            local toggleContainer = Instance.new("TextButton", holder) -- Sửa thành TextButton
+            local toggleContainer = Instance.new("TextButton", holder)
             toggleContainer.Size = UDim2.new(0,46,0,20)
             toggleContainer.Position = UDim2.new(1,-50,0.5,-10)
-            toggleContainer.BackgroundColor3 = Color3.fromRGB(70,70,70)
+            toggleContainer.BackgroundColor3 = Theme.DarkGray
             toggleContainer.BorderSizePixel = 0
-            toggleContainer.AutoButtonColor = false -- Tắt hiệu ứng mặc định
+            toggleContainer.AutoButtonColor = false
             toggleContainer.Text = ""
+            toggleContainer.Active = true
             Round(toggleContainer,10)
             
-            -- Thêm stroke cho toggle
             local toggleStroke = Instance.new("UIStroke", toggleContainer)
             toggleStroke.Thickness = 1
-            toggleStroke.Color = Color3.fromRGB(50,50,50)
+            toggleStroke.Color = Theme.Purple  -- Viền tím
 
             local circle = Instance.new("Frame", toggleContainer)
             circle.Size = UDim2.new(0,16,0,16)
             circle.Position = UDim2.new(0,2,0.5,-8)
-            circle.BackgroundColor3 = Color3.fromRGB(220,220,220)
+            circle.BackgroundColor3 = Theme.White
             circle.BorderSizePixel = 0
             Round(circle,8)
             
-            -- Thêm stroke cho circle
             local circleStroke = Instance.new("UIStroke", circle)
             circleStroke.Thickness = 1
-            circleStroke.Color = Color3.fromRGB(180,180,180)
+            circleStroke.Color = Theme.Ruby  -- Viền đỏ cho circle
 
             local state = default or false
 
             local function refresh()
                 if state then
-                    Tween(toggleContainer, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(80,180,255)})
-                    Tween(toggleStroke, TweenInfo.new(0.2), {Color = Color3.fromRGB(60,150,225)})
+                    -- ON: Màu xanh biển
+                    Tween(toggleContainer, TweenInfo.new(0.2), {BackgroundColor3 = Theme.Ocean})
+                    Tween(toggleStroke, TweenInfo.new(0.2), {Color = Theme.Ocean})
                     Tween(circle, TweenInfo.new(0.2), {Position = UDim2.new(1,-18,0.5,-8)})
-                    Tween(circle, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(240,240,240)})
+                    Tween(circle, TweenInfo.new(0.2), {BackgroundColor3 = Theme.White})
+                    Tween(circleStroke, TweenInfo.new(0.2), {Color = Theme.White})
                 else
-                    Tween(toggleContainer, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(70,70,70)})
-                    Tween(toggleStroke, TweenInfo.new(0.2), {Color = Color3.fromRGB(50,50,50)})
+                    -- OFF: Màu đỏ hồng
+                    Tween(toggleContainer, TweenInfo.new(0.2), {BackgroundColor3 = Theme.DarkGray})
+                    Tween(toggleStroke, TweenInfo.new(0.2), {Color = Theme.Ruby})
                     Tween(circle, TweenInfo.new(0.2), {Position = UDim2.new(0,2,0.5,-8)})
-                    Tween(circle, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(220,220,220)})
+                    Tween(circle, TweenInfo.new(0.2), {BackgroundColor3 = Theme.White})
+                    Tween(circleStroke, TweenInfo.new(0.2), {Color = Theme.Ruby})
                 end
             end
 
-            toggleContainer.MouseButton1Click:Connect(function()
-                state = not state
-                refresh()
-                callback(state)
+            -- Xử lý click/touch CHUẨN cho Toggle
+            toggleContainer.InputBegan:Connect(function(input)
+                if not uiVisible then return end
+                
+                if input.UserInputType == Enum.UserInputType.MouseButton1 or 
+                   input.UserInputType == Enum.UserInputType.Touch then
+                    
+                    if IsInputInFrame(toggleContainer, input.Position) then
+                        state = not state
+                        refresh()
+                        callback(state)
+                    end
+                end
             end)
 
             refresh()
@@ -281,43 +395,48 @@ function Library:CreateWindow(cfg)
             label.Text = text .. ": " .. default
             label.Font = Enum.Font.Gotham
             label.TextSize = 13
-            label.TextColor3 = Color3.fromRGB(200,220,255)
+            label.TextColor3 = Theme.Ocean  -- Màu xanh cho text
             label.BackgroundTransparency = 1
             label.TextXAlignment = Enum.TextXAlignment.Left
 
-            local bar = Instance.new("TextButton", holder) -- Sửa thành TextButton
+            local bar = Instance.new("TextButton", holder)
             bar.Position = UDim2.new(0,0,0,28)
             bar.Size = UDim2.new(1,0,0,12)
-            bar.BackgroundColor3 = Color3.fromRGB(60,60,60)
+            bar.BackgroundColor3 = Theme.DarkGray
             bar.BorderSizePixel = 0
             bar.AutoButtonColor = false
             bar.Text = ""
+            bar.Active = true
             Round(bar,6)
             
-            -- Thêm stroke cho bar
             local barStroke = Instance.new("UIStroke", bar)
             barStroke.Thickness = 1
-            barStroke.Color = Color3.fromRGB(40,40,40)
+            barStroke.Color = Theme.Purple  -- Viền tím
 
             local fill = Instance.new("Frame", bar)
             fill.Size = UDim2.new((default-min)/(max-min),0,1,0)
-            fill.BackgroundColor3 = Color3.fromRGB(120,180,255)
+            fill.BackgroundColor3 = Theme.Ocean  -- Fill xanh biển
             fill.BorderSizePixel = 0
             Round(fill,6)
             
-            -- Thêm stroke cho fill
             local fillStroke = Instance.new("UIStroke", fill)
             fillStroke.Thickness = 1
-            fillStroke.Color = Color3.fromRGB(100,160,235)
+            fillStroke.Color = Theme.Ruby  -- Viền đỏ cho fill
 
+            -- Biến cho slider (CHUẨN CHO CẢ PC VÀ MOBILE)
             local dragging = false
             local currentValue = default
+            local activeInput -- input đang drag (touch hoặc mouse)
 
-            local function updateSlider(mouseX)
-                local absolutePosition = bar.AbsolutePosition
-                local absoluteSize = bar.AbsoluteSize
+            local function updateSliderFromInput(input)
+                if not uiVisible then return end
+                if not dragging then return end
                 
-                local relativeX = (mouseX - absolutePosition.X) / absoluteSize.X
+                local absPos = bar.AbsolutePosition
+                local absSize = bar.AbsoluteSize
+                local inputX = input.Position.X
+                
+                local relativeX = (inputX - absPos.X) / absSize.X
                 relativeX = math.clamp(relativeX, 0, 1)
                 
                 fill.Size = UDim2.new(relativeX, 0, 1, 0)
@@ -326,45 +445,48 @@ function Library:CreateWindow(cfg)
                 callback(currentValue)
             end
 
-            bar.MouseButton1Down:Connect(function()
-                dragging = true
-                Tween(fill, TweenInfo.new(0.1), {BackgroundColor3 = Color3.fromRGB(140,200,255)})
-                Tween(fillStroke, TweenInfo.new(0.1), {Color = Color3.fromRGB(120,180,235)})
+            -- Xử lý input CHUẨN cho Slider
+            bar.InputBegan:Connect(function(input)
+                if not uiVisible then return end
                 
-                -- Cập nhật ngay khi click
-                local mouse = game:GetService("Players").LocalPlayer:GetMouse()
-                updateSlider(mouse.X)
-            end)
-            
-            local connection
-            connection = RunService.RenderStepped:Connect(function()
-                if dragging then
-                    local mouse = game:GetService("Players").LocalPlayer:GetMouse()
-                    updateSlider(mouse.X)
-                end
-            end)
-            
-            UserInputService.InputEnded:Connect(function(input)
-                if input.UserInputType == Enum.UserInputType.MouseButton1 then 
-                    dragging = false
-                    Tween(fill, TweenInfo.new(0.1), {BackgroundColor3 = Color3.fromRGB(120,180,255)})
-                    Tween(fillStroke, TweenInfo.new(0.1), {Color = Color3.fromRGB(100,160,235)})
+                if input.UserInputType == Enum.UserInputType.MouseButton1 or 
+                   input.UserInputType == Enum.UserInputType.Touch then
                     
-                    if connection then
-                        connection:Disconnect()
-                        connection = nil
+                    if IsInputInFrame(bar, input.Position) then
+                        dragging = true
+                        activeInput = input
+                        Tween(fill, TweenInfo.new(0.1), {BackgroundColor3 = Theme.Ruby})  -- Đỏ khi đang kéo
+                        Tween(fillStroke, TweenInfo.new(0.1), {Color = Theme.Ruby})
+                        updateSliderFromInput(input)
                     end
                 end
             end)
             
-            -- Hiệu ứng hover cho slider
+            bar.InputEnded:Connect(function(input)
+                if input == activeInput then
+                    dragging = false
+                    activeInput = nil
+                    Tween(fill, TweenInfo.new(0.1), {BackgroundColor3 = Theme.Ocean})  -- Về xanh khi thả
+                    Tween(fillStroke, TweenInfo.new(0.1), {Color = Theme.Ruby})
+                end
+            end)
+            
+            UserInputService.InputChanged:Connect(function(input)
+                if dragging and input == activeInput then
+                    updateSliderFromInput(input)
+                end
+            end)
+            
+            -- Hiệu ứng hover chỉ cho PC
             bar.MouseEnter:Connect(function()
-                Tween(barStroke, TweenInfo.new(0.2), {Color = Color3.fromRGB(80,80,80)})
+                if uiVisible then
+                    Tween(barStroke, TweenInfo.new(0.2), {Color = Theme.Ocean})  -- Xanh khi hover
+                end
             end)
             
             bar.MouseLeave:Connect(function()
-                if not dragging then
-                    Tween(barStroke, TweenInfo.new(0.2), {Color = Color3.fromRGB(40,40,40)})
+                if uiVisible and not dragging then
+                    Tween(barStroke, TweenInfo.new(0.2), {Color = Theme.Purple})  -- Về tím
                 end
             end)
         end
