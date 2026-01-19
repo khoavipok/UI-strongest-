@@ -5,7 +5,6 @@ local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
 local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer
 
 local Library = {}
 
@@ -22,12 +21,12 @@ local function Tween(obj, info, props)
     return tween
 end
 
--- Hàm kiểm tra chuột có nằm trong frame không
-local function IsMouseInFrame(frame, mousePos)
+-- Hàm kiểm tra input có nằm trong frame không (PC + Mobile)
+local function IsInputInFrame(frame, inputPosition)
     local pos = frame.AbsolutePosition
     local size = frame.AbsoluteSize
-    return mousePos.X >= pos.X and mousePos.X <= pos.X + size.X and
-           mousePos.Y >= pos.Y and mousePos.Y <= pos.Y + size.Y
+    return inputPosition.X >= pos.X and inputPosition.X <= pos.X + size.X and
+           inputPosition.Y >= pos.Y and inputPosition.Y <= pos.Y + size.Y
 end
 
 --================ WINDOW =================--
@@ -90,7 +89,7 @@ function Library:CreateWindow(cfg)
     Title.TextXAlignment = Enum.TextXAlignment.Center
     Round(Title, 8)
 
-    -- SCROLL CONTAINER
+    -- SCROLL CONTAINER (cải thiện cho mobile)
     local Container = Instance.new("ScrollingFrame", Main)
     Container.Position = UDim2.new(0,5,0,35)
     Container.Size = UDim2.new(1,-10,1,-40)
@@ -103,6 +102,7 @@ function Library:CreateWindow(cfg)
     Container.ScrollingDirection = Enum.ScrollingDirection.Y
     Container.ScrollBarImageColor3 = Color3.fromRGB(100,100,100)
     Container.VerticalScrollBarInset = Enum.ScrollBarInset.Always
+    Container.TouchScrollSensitivity = 10 -- Cải thiện cảm ứng trên mobile
 
     local Layout = Instance.new("UIListLayout", Container)
     Layout.Padding = UDim.new(0,8)
@@ -186,7 +186,12 @@ function Library:CreateWindow(cfg)
         uiVisible = not uiVisible
     end
 
-    OpenBtn.MouseButton1Click:Connect(toggleUI)
+    -- Xử lý cả PC và Mobile cho Open Button
+    OpenBtn.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            toggleUI()
+        end
+    end)
 
     local Window = {}
 
@@ -228,7 +233,7 @@ function Library:CreateWindow(cfg)
             btnHighlight.Transparency = 0.8
             btnHighlight.LineJoinMode = Enum.LineJoinMode.Round
 
-            -- Hiệu ứng hover
+            -- Hiệu ứng hover (chỉ PC)
             btn.MouseEnter:Connect(function()
                 if uiVisible then
                     Tween(btn, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(60,60,60)})
@@ -245,31 +250,37 @@ function Library:CreateWindow(cfg)
                 end
             end)
 
-            -- Hiệu ứng click - CHỈ CLICK KHI CHUỘT TRONG BTN
-            local isClickingButton = false
-            local clickStartPosition
+            -- Xử lý click/touch CHUẨN
+            local isClicking = false
             
             btn.InputBegan:Connect(function(input)
-                if input.UserInputType == Enum.UserInputType.MouseButton1 and uiVisible then
-                    if IsMouseInFrame(btn, input.Position) then
-                        isClickingButton = true
-                        clickStartPosition = input.Position
+                if not uiVisible then return end
+                
+                if input.UserInputType == Enum.UserInputType.MouseButton1 or 
+                   input.UserInputType == Enum.UserInputType.Touch then
+                    
+                    if IsInputInFrame(btn, input.Position) then
+                        isClicking = true
                         Tween(btn, TweenInfo.new(0.1), {BackgroundColor3 = Color3.fromRGB(100,160,230)})
                     end
                 end
             end)
             
             btn.InputEnded:Connect(function(input)
-                if input.UserInputType == Enum.UserInputType.MouseButton1 and isClickingButton then
-                    if IsMouseInFrame(btn, input.Position) then
-                        Tween(btn, TweenInfo.new(0.1), {BackgroundColor3 = Color3.fromRGB(120,180,255)})
-                        task.wait(0.05)
-                        Tween(btn, TweenInfo.new(0.1), {BackgroundColor3 = Color3.fromRGB(45,45,45)})
-                        callback()
-                    else
-                        Tween(btn, TweenInfo.new(0.1), {BackgroundColor3 = Color3.fromRGB(45,45,45)})
+                if input.UserInputType == Enum.UserInputType.MouseButton1 or 
+                   input.UserInputType == Enum.UserInputType.Touch then
+                    
+                    if isClicking then
+                        if IsInputInFrame(btn, input.Position) then
+                            Tween(btn, TweenInfo.new(0.1), {BackgroundColor3 = Color3.fromRGB(120,180,255)})
+                            task.wait(0.05)
+                            Tween(btn, TweenInfo.new(0.1), {BackgroundColor3 = Color3.fromRGB(45,45,45)})
+                            callback()
+                        else
+                            Tween(btn, TweenInfo.new(0.1), {BackgroundColor3 = Color3.fromRGB(45,45,45)})
+                        end
+                        isClicking = false
                     end
-                    isClickingButton = false
                 end
             end)
         end
@@ -330,25 +341,18 @@ function Library:CreateWindow(cfg)
                 end
             end
 
-            -- Toggle chỉ hoạt động khi click bắt đầu trong toggleContainer
-            local isClickingToggle = false
-            
+            -- Xử lý click/touch CHUẨN cho Toggle
             toggleContainer.InputBegan:Connect(function(input)
-                if input.UserInputType == Enum.UserInputType.MouseButton1 and uiVisible then
-                    if IsMouseInFrame(toggleContainer, input.Position) then
-                        isClickingToggle = true
-                    end
-                end
-            end)
-            
-            toggleContainer.InputEnded:Connect(function(input)
-                if input.UserInputType == Enum.UserInputType.MouseButton1 and isClickingToggle then
-                    if IsMouseInFrame(toggleContainer, input.Position) then
+                if not uiVisible then return end
+                
+                if input.UserInputType == Enum.UserInputType.MouseButton1 or 
+                   input.UserInputType == Enum.UserInputType.Touch then
+                    
+                    if IsInputInFrame(toggleContainer, input.Position) then
                         state = not state
                         refresh()
                         callback(state)
                     end
-                    isClickingToggle = false
                 end
             end)
 
@@ -393,8 +397,10 @@ function Library:CreateWindow(cfg)
             fillStroke.Thickness = 1
             fillStroke.Color = Color3.fromRGB(100,160,235)
 
+            -- Biến cho slider (CHUẨN CHO CẢ PC VÀ MOBILE)
             local dragging = false
             local currentValue = default
+            local activeInput -- input đang drag (touch hoặc mouse)
 
             local function updateSliderFromInput(input)
                 if not uiVisible then return end
@@ -402,9 +408,9 @@ function Library:CreateWindow(cfg)
                 
                 local absPos = bar.AbsolutePosition
                 local absSize = bar.AbsoluteSize
-                local mouseX = input.Position.X
+                local inputX = input.Position.X
                 
-                local relativeX = (mouseX - absPos.X) / absSize.X
+                local relativeX = (inputX - absPos.X) / absSize.X
                 relativeX = math.clamp(relativeX, 0, 1)
                 
                 fill.Size = UDim2.new(relativeX, 0, 1, 0)
@@ -413,11 +419,16 @@ function Library:CreateWindow(cfg)
                 callback(currentValue)
             end
 
-            -- Input handling đúng chuẩn
+            -- Xử lý input CHUẨN cho Slider
             bar.InputBegan:Connect(function(input)
-                if input.UserInputType == Enum.UserInputType.MouseButton1 and uiVisible then
-                    if IsMouseInFrame(bar, input.Position) then
+                if not uiVisible then return end
+                
+                if input.UserInputType == Enum.UserInputType.MouseButton1 or 
+                   input.UserInputType == Enum.UserInputType.Touch then
+                    
+                    if IsInputInFrame(bar, input.Position) then
                         dragging = true
+                        activeInput = input
                         Tween(fill, TweenInfo.new(0.1), {BackgroundColor3 = Color3.fromRGB(140,200,255)})
                         Tween(fillStroke, TweenInfo.new(0.1), {Color = Color3.fromRGB(120,180,235)})
                         updateSliderFromInput(input)
@@ -426,22 +437,21 @@ function Library:CreateWindow(cfg)
             end)
             
             bar.InputEnded:Connect(function(input)
-                if input.UserInputType == Enum.UserInputType.MouseButton1 then
-                    if dragging then
-                        dragging = false
-                        Tween(fill, TweenInfo.new(0.1), {BackgroundColor3 = Color3.fromRGB(120,180,255)})
-                        Tween(fillStroke, TweenInfo.new(0.1), {Color = Color3.fromRGB(100,160,235)})
-                    end
+                if input == activeInput then
+                    dragging = false
+                    activeInput = nil
+                    Tween(fill, TweenInfo.new(0.1), {BackgroundColor3 = Color3.fromRGB(120,180,255)})
+                    Tween(fillStroke, TweenInfo.new(0.1), {Color = Color3.fromRGB(100,160,235)})
                 end
             end)
             
             UserInputService.InputChanged:Connect(function(input)
-                if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+                if dragging and input == activeInput then
                     updateSliderFromInput(input)
                 end
             end)
             
-            -- Hiệu ứng hover cho slider
+            -- Hiệu ứng hover chỉ cho PC
             bar.MouseEnter:Connect(function()
                 if uiVisible then
                     Tween(barStroke, TweenInfo.new(0.2), {Color = Color3.fromRGB(80,80,80)})
