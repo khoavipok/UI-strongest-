@@ -1,5 +1,5 @@
 --// KHANHLY UI LIBRARY - FIXED VERSION
---// GitHub Ready | Correct Scroll | Live Controls | Wave Border | MOBILE SUPPORT | SAVE POSITION
+--// GitHub Ready | Correct Scroll | Live Controls | Wave Border | MOBILE SUPPORT
 
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
@@ -25,17 +25,12 @@ function Library:CreateWindow(cfg)
     ScreenGui.ResetOnSpawn = false
     ScreenGui.Parent = game.CoreGui
 
-    -- Lưu vị trí UI (persistent storage)
-    local savedPosition = nil
-    local lastSize = UDim2.new(0, 240, 0, 320)
-    local lastBackgroundTransparency = 0.15
-
     -- MAIN FRAME
     local Main = Instance.new("Frame", ScreenGui)
-    Main.Size = lastSize
-    Main.Position = UDim2.new(0, 20, 0.5, -160) -- Vị trí mặc định
+    Main.Size = UDim2.new(0, 240, 0, 320)
+    Main.Position = UDim2.new(0, 20, 0.5, -160)
     Main.BackgroundColor3 = Color3.fromRGB(25,25,25)
-    Main.BackgroundTransparency = lastBackgroundTransparency
+    Main.BackgroundTransparency = 0.15
     Main.Active = true
     Main.Draggable = true
     Main.Visible = false -- Ẩn ban đầu
@@ -91,10 +86,10 @@ function Library:CreateWindow(cfg)
     Container.ScrollBarImageColor3 = Color3.fromRGB(150,150,150)
     
     -- QUAN TRỌNG: Cấu hình cho Mobile
-    Container.ElasticBehavior = Enum.ElasticBehavior.WhenScrollable
-    Container.VerticalScrollBarInset = Enum.ScrollBarInset.ScrollBar
-    Container.ScrollBarImageTransparency = 0.5
-    Container.TouchScrollBehavior = Enum.TouchScrollBehavior.Default
+    Container.ElasticBehavior = Enum.ElasticBehavior.WhenScrollable  -- Hiệu ứng đàn hồi
+    Container.VerticalScrollBarInset = Enum.ScrollBarInset.ScrollBar  -- Scrollbar không che nội dung
+    Container.ScrollBarImageTransparency = 0.5  -- Scrollbar trong suốt hơn trên mobile
+    Container.TouchScrollBehavior = Enum.TouchScrollBehavior.Default  -- Hỗ trợ cảm ứng
 
     local Layout = Instance.new("UIListLayout", Container)
     Layout.Padding = UDim.new(0,8)
@@ -154,87 +149,37 @@ function Library:CreateWindow(cfg)
         ColorSequenceKeypoint.new(1, Color3.fromRGB(160,90,255))
     }
 
-    -- Hiệu ứng ẩn/hiện UI với lưu vị trí
+    -- Hiệu ứng ẩn/hiện UI
     local uiVisible = false
-    
-    -- Hàm ẩn UI (lưu vị trí trước khi ẩn)
-    local function hideUI()
-        -- Lưu vị trí và kích thước hiện tại
-        savedPosition = Main.Position
-        lastSize = Main.Size
-        lastBackgroundTransparency = Main.BackgroundTransparency
-        
-        -- Ẩn UI với hiệu ứng
-        Tween(Main, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-            Size = UDim2.new(0, 0, 0, 0),
-            BackgroundTransparency = 1
-        })
-        wait(0.3)
-        Main.Visible = false
-    end
-    
-    -- Hàm hiện UI (dùng vị trí đã lưu)
-    local function showUI()
-        -- Hiện UI với hiệu ứng
-        Main.Visible = true
-        
-        -- Nếu có vị trí đã lưu, dùng vị trí đó
-        if savedPosition then
-            Main.Position = savedPosition
-        else
-            -- Nếu lần đầu, dùng vị trí mặc định
-            Main.Position = UDim2.new(0, 20, 0.5, -160)
-        end
-        
-        -- Đặt kích thước nhỏ nhất trước khi tween
-        Main.Size = UDim2.new(0, 0, 0, 0)
-        Main.BackgroundTransparency = 1
-        
-        -- Tween về kích thước và độ trong suốt đã lưu
-        Tween(Main, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-            Size = lastSize,
-            BackgroundTransparency = lastBackgroundTransparency
-        })
-    end
-    
     local function toggleUI()
         if uiVisible then
-            hideUI()
+            Tween(Main, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                Size = UDim2.new(0, 0, 0, 0),
+                Position = UDim2.new(0, 20, 0.5, -160),
+                BackgroundTransparency = 1
+            })
+            wait(0.3)
+            Main.Visible = false
         else
-            showUI()
+            Main.Visible = true
+            Main.Size = UDim2.new(0, 0, 0, 0)
+            Main.Position = UDim2.new(0, 20, 0.5, -160)
+            Main.BackgroundTransparency = 1
+            
+            Tween(Main, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+                Size = UDim2.new(0, 240, 0, 320),
+                BackgroundTransparency = 0.15
+            })
         end
         uiVisible = not uiVisible
     end
 
     OpenBtn.MouseButton1Click:Connect(toggleUI)
-    OpenBtn.TouchTap:Connect(toggleUI)
     
-    -- Lưu ý: Khi người dùng kéo Main, vị trí sẽ tự động cập nhật
-    -- Khi ẩn UI, savedPosition sẽ lưu vị trí hiện tại
+    -- Thêm hỗ trợ touch cho Open Button trên mobile
+    OpenBtn.TouchTap:Connect(toggleUI)
 
     local Window = {}
-
-    -- Hàm để lưu vị trí thủ công (nếu cần)
-    function Window:SavePosition()
-        savedPosition = Main.Position
-        print("Đã lưu vị trí UI:", savedPosition)
-    end
-    
-    -- Hàm để đặt vị trí cụ thể
-    function Window:SetPosition(position)
-        if position then
-            Main.Position = position
-            savedPosition = position
-        end
-    end
-    
-    -- Hàm để reset về vị trí mặc định
-    function Window:ResetPosition()
-        savedPosition = UDim2.new(0, 20, 0.5, -160)
-        if Main.Visible then
-            Main.Position = savedPosition
-        end
-    end
 
     function Window:EditOpenButton(cfg2)
         if cfg2.Icon then OpenBtn.Image = cfg2.Icon end
@@ -281,7 +226,7 @@ function Library:CreateWindow(cfg)
             end
             
             btn.MouseButton1Click:Connect(onActivated)
-            btn.TouchTap:Connect(onActivated)
+            btn.TouchTap:Connect(onActivated) -- Hỗ trợ mobile tap
 
             btn.MouseEnter:Connect(function()
                 Tween(btn, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(60,60,60)})
@@ -359,7 +304,7 @@ function Library:CreateWindow(cfg)
             end
             
             toggleContainer.MouseButton1Click:Connect(onToggle)
-            toggleContainer.TouchTap:Connect(onToggle)
+            toggleContainer.TouchTap:Connect(onToggle) -- Hỗ trợ mobile
 
             refresh()
         end
