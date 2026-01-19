@@ -8,6 +8,40 @@ local Players = game:GetService("Players")
 
 local Library = {}
 
+--================ UTILS =================--
+local function GetInputPosition(input)
+    if not input then return nil end
+    if input.Position then return input.Position end
+    if UserInputService:GetLastInputType() == Enum.UserInputType.Touch then
+        local touches = UserInputService:GetTouches()
+        if touches and touches[1] then
+            return touches[1].Position
+        end
+    end
+    return nil
+end
+
+local function IsInputInFrame(frame, input)
+    local posInput = GetInputPosition(input)
+    if not posInput then return false end
+    local pos = frame.AbsolutePosition
+    local size = frame.AbsoluteSize
+    return posInput.X >= pos.X and posInput.X <= pos.X + size.X and
+           posInput.Y >= pos.Y and posInput.Y <= pos.Y + size.Y
+end
+
+local function Round(obj, r)
+    local c = Instance.new("UICorner")
+    c.CornerRadius = UDim.new(0, r)
+    c.Parent = obj
+end
+
+local function Tween(obj, info, props)
+    local tween = TweenService:Create(obj, info, props)
+    tween:Play()
+    return tween
+end
+
 --================ THEME =================--
 local Theme = {
     Ruby = Color3.fromRGB(255, 70, 120),     -- đỏ hồng ngọc
@@ -26,27 +60,6 @@ local WaveGradient = ColorSequence.new{
     ColorSequenceKeypoint.new(0.5, Theme.Purple), -- tím
     ColorSequenceKeypoint.new(1, Theme.Ocean)     -- xanh biển
 }
-
---================ UTILS =================--
-local function Round(obj, r)
-    local c = Instance.new("UICorner")
-    c.CornerRadius = UDim.new(0, r)
-    c.Parent = obj
-end
-
-local function Tween(obj, info, props)
-    local tween = TweenService:Create(obj, info, props)
-    tween:Play()
-    return tween
-end
-
--- Hàm kiểm tra input có nằm trong frame không (PC + Mobile)
-local function IsInputInFrame(frame, inputPosition)
-    local pos = frame.AbsolutePosition
-    local size = frame.AbsoluteSize
-    return inputPosition.X >= pos.X and inputPosition.X <= pos.X + size.X and
-           inputPosition.Y >= pos.Y and inputPosition.Y <= pos.Y + size.Y
-end
 
 --================ WINDOW =================--
 function Library:CreateWindow(cfg)
@@ -275,7 +288,7 @@ function Library:CreateWindow(cfg)
                 if input.UserInputType == Enum.UserInputType.MouseButton1 or 
                    input.UserInputType == Enum.UserInputType.Touch then
                     
-                    if IsInputInFrame(btn, input.Position) then
+                    if IsInputInFrame(btn, input) then
                         isClicking = true
                         Tween(btn, TweenInfo.new(0.1), {BackgroundColor3 = Theme.Ruby})
                         Tween(btnStroke, TweenInfo.new(0.1), {Color = Theme.Ruby})
@@ -288,7 +301,7 @@ function Library:CreateWindow(cfg)
                    input.UserInputType == Enum.UserInputType.Touch then
                     
                     if isClicking then
-                        if IsInputInFrame(btn, input.Position) then
+                        if IsInputInFrame(btn, input) then
                             Tween(btn, TweenInfo.new(0.1), {BackgroundColor3 = Theme.Ocean})
                             Tween(btnStroke, TweenInfo.new(0.1), {Color = Theme.Ocean})
                             task.wait(0.05)
@@ -338,7 +351,7 @@ function Library:CreateWindow(cfg)
             
             local toggleStroke = Instance.new("UIStroke", toggleContainer)
             toggleStroke.Thickness = 1
-            toggleStroke.Color = Theme.Purple
+            toggleStroke.Color = Theme.Ruby
 
             local circle = Instance.new("Frame", toggleContainer)
             circle.Size = UDim2.new(0,16,0,16)
@@ -352,21 +365,27 @@ function Library:CreateWindow(cfg)
             circleStroke.Color = Theme.Ruby
 
             local state = default or false
+            
+            -- Biến để kiểm soát animation
+            local gradientAnimation
+            local isAnimatingGradient = false
 
             local function refresh()
                 if state then
                     -- ON: BẬT GRADIENT SÓNG
                     toggleGradient.Enabled = true
-                    toggleContainer.BackgroundColor3 = Theme.DarkGray
-                    toggleStroke.Color = Theme.Ocean
+                    toggleStroke.Color = Color3.new(1, 1, 1)  -- Viền trắng khi bật
                     
                     -- Animation xoay gradient cho toggle
-                    task.spawn(function()
-                        while state and toggleContainer.Parent do
-                            toggleGradient.Rotation = toggleGradient.Rotation + 1
-                            task.wait(0.03)
-                        end
-                    end)
+                    if not isAnimatingGradient then
+                        isAnimatingGradient = true
+                        gradientAnimation = task.spawn(function()
+                            while isAnimatingGradient and toggleContainer and toggleContainer.Parent do
+                                toggleGradient.Rotation = toggleGradient.Rotation + 1
+                                task.wait(0.03)
+                            end
+                        end)
+                    end
                     
                     Tween(circle, TweenInfo.new(0.2), {Position = UDim2.new(1,-18,0.5,-8)})
                     Tween(circle, TweenInfo.new(0.2), {BackgroundColor3 = Theme.White})
@@ -374,8 +393,14 @@ function Library:CreateWindow(cfg)
                 else
                     -- OFF: TẮT GRADIENT, DÙNG MÀU CỐ ĐỊNH
                     toggleGradient.Enabled = false
-                    toggleContainer.BackgroundColor3 = Theme.DarkGray
                     toggleStroke.Color = Theme.Ruby
+                    
+                    -- Dừng animation gradient
+                    isAnimatingGradient = false
+                    if gradientAnimation then
+                        task.cancel(gradientAnimation)
+                        gradientAnimation = nil
+                    end
                     
                     Tween(circle, TweenInfo.new(0.2), {Position = UDim2.new(0,2,0.5,-8)})
                     Tween(circle, TweenInfo.new(0.2), {BackgroundColor3 = Theme.White})
@@ -390,7 +415,7 @@ function Library:CreateWindow(cfg)
                 if input.UserInputType == Enum.UserInputType.MouseButton1 or 
                    input.UserInputType == Enum.UserInputType.Touch then
                     
-                    if IsInputInFrame(toggleContainer, input.Position) then
+                    if IsInputInFrame(toggleContainer, input) then
                         state = not state
                         refresh()
                         callback(state)
@@ -447,7 +472,7 @@ function Library:CreateWindow(cfg)
 
             -- Animation xoay gradient cho slider fill
             task.spawn(function()
-                while fill.Parent do
+                while fill and fill.Parent do
                     fillGradient.Rotation = fillGradient.Rotation + 1
                     task.wait(0.03)
                 end
@@ -462,9 +487,12 @@ function Library:CreateWindow(cfg)
                 if not uiVisible then return end
                 if not dragging then return end
                 
+                local pos = GetInputPosition(input)
+                if not pos then return end
+                
                 local absPos = bar.AbsolutePosition
                 local absSize = bar.AbsoluteSize
-                local inputX = input.Position.X
+                local inputX = pos.X
                 
                 local relativeX = (inputX - absPos.X) / absSize.X
                 relativeX = math.clamp(relativeX, 0, 1)
@@ -482,7 +510,7 @@ function Library:CreateWindow(cfg)
                 if input.UserInputType == Enum.UserInputType.MouseButton1 or 
                    input.UserInputType == Enum.UserInputType.Touch then
                     
-                    if IsInputInFrame(bar, input.Position) then
+                    if IsInputInFrame(bar, input) then
                         dragging = true
                         activeInput = input
                         Tween(fill, TweenInfo.new(0.1), {BackgroundColor3 = Theme.Ruby})
