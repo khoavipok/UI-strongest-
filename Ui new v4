@@ -84,7 +84,7 @@ local function CreateSideTabSystem(screenGui, mainFrame)
     LeftTab.BackgroundTransparency = 0.3
     LeftTab.Visible = false
     LeftTab.Active = true
-    LeftTab.Draggable = false  -- KHÔNG cho kéo side tab
+    LeftTab.Draggable = false
     Round(LeftTab, 8)
     
     local leftStroke = Instance.new("UIStroke", LeftTab)
@@ -99,7 +99,7 @@ local function CreateSideTabSystem(screenGui, mainFrame)
     RightTab.BackgroundTransparency = 0.3
     RightTab.Visible = false
     RightTab.Active = true
-    RightTab.Draggable = false  -- KHÔNG cho kéo side tab
+    RightTab.Draggable = false
     Round(RightTab, 8)
     
     local rightStroke = Instance.new("UIStroke", RightTab)
@@ -305,3 +305,87 @@ local function CreateSideTabSystem(screenGui, mainFrame)
         RightBar = RightBar
     }
 end
+
+--================ WINDOW =================--
+-- THÊM HÀM NÀY VÀO LIBRARY
+function Library:CreateWindow(config)
+    config = config or {}
+    local title = config.Title or "Khanhly Hub"
+    
+    -- Tạo ScreenGui
+    local ScreenGui = Instance.new("ScreenGui")
+    ScreenGui.Name = "KhanhlyUI"
+    ScreenGui.ResetOnSpawn = false
+    ScreenGui.Parent = game:GetService("CoreGui")  -- CoreGui để script hoạt động
+    
+    -- Tạo Main Frame (UI chính)
+    local MainFrame = Instance.new("Frame", ScreenGui)
+    MainFrame.Size = UDim2.new(0, 360, 0, 320)
+    MainFrame.Position = UDim2.new(0.5, -180, 0.5, -160)
+    MainFrame.BackgroundColor3 = Theme.Dark
+    MainFrame.BackgroundTransparency = 0.15
+    MainFrame.Active = true
+    MainFrame.Draggable = true
+    Round(MainFrame, 10)
+    
+    -- Viền sóng cho Main Frame
+    local mainStroke = Instance.new("UIStroke", MainFrame)
+    mainStroke.Thickness = 2
+    mainStroke.Color = Theme.Ruby
+    
+    local mainGradient = Instance.new("UIGradient", mainStroke)
+    mainGradient.Color = ColorSequence.new{
+        ColorSequenceKeypoint.new(0, Theme.Ruby),
+        ColorSequenceKeypoint.new(0.5, Theme.Purple),
+        ColorSequenceKeypoint.new(1, Theme.Ocean)
+    }
+    mainGradient.Rotation = 0
+    
+    -- Animation xoay viền
+    task.spawn(function()
+        while mainGradient and mainGradient.Parent do
+            mainGradient.Rotation = mainGradient.Rotation + 1
+            task.wait(0.03)
+        end
+    end)
+    
+    -- Title
+    local TitleLabel = Instance.new("TextLabel", MainFrame)
+    TitleLabel.Size = UDim2.new(1, -20, 0, 40)
+    TitleLabel.Position = UDim2.new(0, 10, 0, 10)
+    TitleLabel.BackgroundTransparency = 1
+    TitleLabel.Text = title
+    TitleLabel.TextColor3 = Theme.Ruby
+    TitleLabel.Font = Enum.Font.GothamBold
+    TitleLabel.TextSize = 18
+    TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
+    
+    -- Tạo Side Tab System (GẮN VÀO ĐÂY)
+    local SideTabs = CreateSideTabSystem(ScreenGui, MainFrame)
+    
+    -- Trả về Window object có thể mở rộng
+    local Window = {}
+    
+    -- Method để thêm tab vào UI chính (nếu cần)
+    function Window:CreateTab(name)
+        -- Có thể thêm logic tạo tab nội dung ở đây
+        return {
+            Name = name,
+            AddButton = function(text, callback)
+                print("Button added:", text)
+                -- Thêm button logic
+            end
+        }
+    end
+    
+    -- Trả về cả MainFrame và SideTabs để sử dụng bên ngoài
+    return {
+        MainFrame = MainFrame,
+        LeftTab = SideTabs.LeftTab,
+        RightTab = SideTabs.RightTab,
+        LeftBar = SideTabs.LeftBar,
+        RightBar = SideTabs.RightBar,
+        CreateTab = Window.CreateTab
+    }
+end
+return Library
