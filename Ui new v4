@@ -1,0 +1,307 @@
+--// KHANHLY UI LIBRARY - RUBY RED TOGGLE
+--// GitHub Ready | Correct Scroll | Live Controls | Wave Border | Ruby Theme
+--// UPDATE: Side Tab System - Sticky UI, Toggle Animation, Mobile Support
+
+local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+local Players = game:GetService("Players")
+
+local Library = {}
+
+--================ UTILS =================--
+local function GetInputPosition(input)
+    if not input then return nil end
+    if input.Position then return input.Position end
+    if UserInputService:GetLastInputType() == Enum.UserInputType.Touch then
+        local touches = UserInputService:GetTouches()
+        if touches and touches[1] then
+            return touches[1].Position
+        end
+    end
+    return nil
+end
+
+local function IsInputInFrame(frame, input)
+    local posInput = GetInputPosition(input)
+    if not posInput then return false end
+    local pos = frame.AbsolutePosition
+    local size = frame.AbsoluteSize
+    return posInput.X >= pos.X and posInput.X <= pos.X + size.X and
+           posInput.Y >= pos.Y and posInput.Y <= pos.Y + size.Y
+end
+
+local function Round(obj, r)
+    local c = Instance.new("UICorner")
+    c.CornerRadius = UDim.new(0, r)
+    c.Parent = obj
+end
+
+local function Tween(obj, info, props)
+    local tween = TweenService:Create(obj, info, props)
+    tween:Play()
+    return tween
+end
+
+--================ THEME =================--
+local Theme = {
+    Ruby = Color3.fromRGB(255, 70, 120),
+    RubyRed = Color3.fromRGB(220, 40, 90),
+    Purple = Color3.fromRGB(170, 90, 255),
+    Ocean = Color3.fromRGB(0, 160, 220),
+    Dark = Color3.fromRGB(25, 25, 25),
+    DarkGray = Color3.fromRGB(45, 45, 45),
+    MediumGray = Color3.fromRGB(60, 60, 60),
+    LightGray = Color3.fromRGB(230, 230, 230),
+    White = Color3.fromRGB(240, 240, 240)
+}
+
+--================ SIDE TAB SYSTEM =================--
+local SideTabSystem = {
+    Config = {
+        SideWidth = 160,
+        SideHeight = 260,
+        BarWidth = 14,
+        Gap = 8,
+        AnimTime = 0.25
+    },
+    State = {
+        LeftOpen = true,
+        RightOpen = true,
+        Animating = false
+    }
+}
+
+-- Tạo side tab hệ thống
+local function CreateSideTabSystem(screenGui, mainFrame)
+    local config = SideTabSystem.Config
+    local state = SideTabSystem.State
+    
+    -- Left Tab
+    local LeftTab = Instance.new("Frame", screenGui)
+    LeftTab.Size = UDim2.new(0, config.SideWidth, 0, config.SideHeight)
+    LeftTab.BackgroundColor3 = Theme.DarkGray
+    LeftTab.BackgroundTransparency = 0.3
+    LeftTab.Visible = false
+    LeftTab.Active = true
+    LeftTab.Draggable = false  -- KHÔNG cho kéo side tab
+    Round(LeftTab, 8)
+    
+    local leftStroke = Instance.new("UIStroke", LeftTab)
+    leftStroke.Thickness = 2
+    leftStroke.Color = Theme.Purple
+    leftStroke.Transparency = 0.5
+    
+    -- Right Tab
+    local RightTab = Instance.new("Frame", screenGui)
+    RightTab.Size = UDim2.new(0, config.SideWidth, 0, config.SideHeight)
+    RightTab.BackgroundColor3 = Theme.DarkGray
+    RightTab.BackgroundTransparency = 0.3
+    RightTab.Visible = false
+    RightTab.Active = true
+    RightTab.Draggable = false  -- KHÔNG cho kéo side tab
+    Round(RightTab, 8)
+    
+    local rightStroke = Instance.new("UIStroke", RightTab)
+    rightStroke.Thickness = 2
+    rightStroke.Color = Theme.Purple
+    rightStroke.Transparency = 0.5
+    
+    -- Thanh dài mở lại
+    local LeftBar = Instance.new("TextButton", screenGui)
+    LeftBar.Size = UDim2.new(0, config.BarWidth, 0, 120)
+    LeftBar.Text = ">"
+    LeftBar.Font = Enum.Font.GothamBold
+    LeftBar.TextSize = 12
+    LeftBar.TextColor3 = Theme.White
+    LeftBar.BackgroundColor3 = Theme.DarkGray
+    LeftBar.BackgroundTransparency = 0.3
+    LeftBar.Visible = false
+    LeftBar.AutoButtonColor = false
+    LeftBar.Active = true
+    Round(LeftBar, 6)
+    
+    local LeftBarStroke = Instance.new("UIStroke", LeftBar)
+    LeftBarStroke.Thickness = 1
+    LeftBarStroke.Color = Theme.Ruby
+    
+    local RightBar = Instance.new("TextButton", screenGui)
+    RightBar.Size = UDim2.new(0, config.BarWidth, 0, 120)
+    RightBar.Text = "<"
+    RightBar.Font = Enum.Font.GothamBold
+    RightBar.TextSize = 12
+    RightBar.TextColor3 = Theme.White
+    RightBar.BackgroundColor3 = Theme.DarkGray
+    RightBar.BackgroundTransparency = 0.3
+    RightBar.Visible = false
+    RightBar.AutoButtonColor = false
+    RightBar.Active = true
+    Round(RightBar, 6)
+    
+    local RightBarStroke = Instance.new("UIStroke", RightBar)
+    RightBarStroke.Thickness = 1
+    RightBarStroke.Color = Theme.Ruby
+    
+    -- Nút ẩn (-) cho side tab
+    local function CreateHideButton(parent, isLeft)
+        local btn = Instance.new("TextButton", parent)
+        btn.Size = UDim2.new(0, 24, 0, 24)
+        btn.Position = isLeft and UDim2.new(1, -28, 0, 6) or UDim2.new(0, 4, 0, 6)
+        btn.Text = "-"
+        btn.Font = Enum.Font.GothamBold
+        btn.TextSize = 14
+        btn.TextColor3 = Theme.White
+        btn.BackgroundColor3 = Theme.MediumGray
+        btn.BackgroundTransparency = 0.2
+        btn.AutoButtonColor = false
+        btn.Active = true
+        Round(btn, 12)
+        
+        local btnStroke = Instance.new("UIStroke", btn)
+        btnStroke.Thickness = 1
+        btnStroke.Color = Theme.Ruby
+        
+        return btn
+    end
+    
+    local HideLeft = CreateHideButton(LeftTab, true)
+    local HideRight = CreateHideButton(RightTab, false)
+    
+    -- Logic ẩn/mở side tab - CHỈ THAY ĐỔI STATE
+    local function ToggleSideTab(isLeft)
+        if state.Animating then return end
+        state.Animating = true
+        
+        if isLeft then
+            if state.LeftOpen then
+                -- Ẩn left tab với tween trượt
+                local targetPos = LeftTab.Position - UDim2.new(0, config.SideWidth, 0, 0)
+                TweenService:Create(LeftTab, TweenInfo.new(config.AnimTime), {
+                    Position = targetPos
+                }):Play()
+                
+                task.delay(config.AnimTime, function()
+                    state.LeftOpen = false
+                    state.Animating = false
+                end)
+            else
+                -- Hiện left tab với tween trượt từ xa
+                local startPos = mainFrame.Position - UDim2.new(0, config.SideWidth + config.Gap + 20, 0, 0)
+                local endPos = mainFrame.Position - UDim2.new(0, config.SideWidth + config.Gap, 0, 0)
+                
+                LeftTab.Position = startPos
+                TweenService:Create(LeftTab, TweenInfo.new(config.AnimTime), {
+                    Position = endPos
+                }):Play()
+                
+                state.LeftOpen = true
+                state.Animating = false
+            end
+        else
+            if state.RightOpen then
+                -- Ẩn right tab với tween trượt
+                local targetPos = RightTab.Position + UDim2.new(0, config.SideWidth, 0, 0)
+                TweenService:Create(RightTab, TweenInfo.new(config.AnimTime), {
+                    Position = targetPos
+                }):Play()
+                
+                task.delay(config.AnimTime, function()
+                    state.RightOpen = false
+                    state.Animating = false
+                end)
+            else
+                -- Hiện right tab với tween trượt từ xa
+                local startPos = mainFrame.Position + UDim2.new(0, mainFrame.AbsoluteSize.X + config.Gap + 20, 0, 0)
+                local endPos = mainFrame.Position + UDim2.new(0, mainFrame.AbsoluteSize.X + config.Gap, 0, 0)
+                
+                RightTab.Position = startPos
+                TweenService:Create(RightTab, TweenInfo.new(config.AnimTime), {
+                    Position = endPos
+                }):Play()
+                
+                state.RightOpen = true
+                state.Animating = false
+            end
+        end
+    end
+    
+    -- Kết nối sự kiện cho nút ẩn và thanh bar (cả PC và Mobile)
+    local function ConnectButtonEvents(btn, isLeft)
+        btn.InputBegan:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 or 
+               input.UserInputType == Enum.UserInputType.Touch then
+                if IsInputInFrame(btn, input) then
+                    ToggleSideTab(isLeft)
+                end
+            end
+        end)
+    end
+    
+    ConnectButtonEvents(HideLeft, true)
+    ConnectButtonEvents(HideRight, false)
+    ConnectButtonEvents(LeftBar, true)
+    ConnectButtonEvents(RightBar, false)
+    
+    -- Hiệu ứng hover cho PC
+    LeftBar.MouseEnter:Connect(function()
+        Tween(LeftBar, TweenInfo.new(0.2), {BackgroundTransparency = 0.1})
+    end)
+    
+    LeftBar.MouseLeave:Connect(function()
+        Tween(LeftBar, TweenInfo.new(0.2), {BackgroundTransparency = 0.3})
+    end)
+    
+    RightBar.MouseEnter:Connect(function()
+        Tween(RightBar, TweenInfo.new(0.2), {BackgroundTransparency = 0.1})
+    end)
+    
+    RightBar.MouseLeave:Connect(function()
+        Tween(RightBar, TweenInfo.new(0.2), {BackgroundTransparency = 0.3})
+    end)
+    
+    -- RenderStepped: Dính chặt UI chính - QUYỀN DUY NHẤT SET VISIBLE
+    RunService.RenderStepped:Connect(function()
+        if not mainFrame.Visible then
+            LeftTab.Visible = false
+            RightTab.Visible = false
+            LeftBar.Visible = false
+            RightBar.Visible = false
+            return
+        end
+        
+        -- ĐIỂM SỬA 1: Không cập nhật khi đang animating
+        if state.Animating then return end
+        
+        -- Cập nhật vị trí dựa trên UI chính
+        local mainPos = mainFrame.Position
+        local mainSize = mainFrame.AbsoluteSize
+        
+        -- ĐIỂM SỬA 2: RenderStepped quản lý duy nhất visible
+        if state.LeftOpen then
+            LeftTab.Position = mainPos - UDim2.new(0, config.SideWidth + config.Gap, 0, 0)
+            LeftTab.Visible = true
+            LeftBar.Visible = false
+        else
+            LeftBar.Position = mainPos - UDim2.new(0, config.BarWidth, 0, 0)
+            LeftBar.Visible = true
+            LeftTab.Visible = false
+        end
+        
+        if state.RightOpen then
+            RightTab.Position = mainPos + UDim2.new(0, mainSize.X + config.Gap, 0, 0)
+            RightTab.Visible = true
+            RightBar.Visible = false
+        else
+            RightBar.Position = mainPos + UDim2.new(0, mainSize.X, 0, 0)
+            RightBar.Visible = true
+            RightTab.Visible = false
+        end
+    end)
+    
+    return {
+        LeftTab = LeftTab,
+        RightTab = RightTab,
+        LeftBar = LeftBar,
+        RightBar = RightBar
+    }
+end
