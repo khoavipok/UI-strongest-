@@ -58,11 +58,12 @@ local Theme = {
 
 --================ SIDE TAB SYSTEM =================--
 local SideTabSystem = {
+    -- ✅ ĐÃ THU NHỎ SIDE TAB CHO GỌN GÀNG
     Config = {
-        SideWidth = 160,
-        SideHeight = 260,
-        BarWidth = 14,
-        Gap = 8,
+        SideWidth = 130,          -- Giảm từ 160
+        SideHeight = 220,         -- Giảm từ 260
+        BarWidth = 12,            -- Giảm từ 14
+        Gap = 6,                  -- Giảm từ 8
         AnimTime = 0.25
     },
     State = {
@@ -109,7 +110,7 @@ local function CreateSideTabSystem(screenGui, mainFrame)
     
     -- Thanh dài mở lại
     local LeftBar = Instance.new("TextButton", screenGui)
-    LeftBar.Size = UDim2.new(0, config.BarWidth, 0, 120)
+    LeftBar.Size = UDim2.new(0, config.BarWidth, 0, 100)  -- Ngắn hơn cho gọn
     LeftBar.Text = ">"
     LeftBar.Font = Enum.Font.GothamBold
     LeftBar.TextSize = 12
@@ -126,7 +127,7 @@ local function CreateSideTabSystem(screenGui, mainFrame)
     LeftBarStroke.Color = Theme.Ruby
     
     local RightBar = Instance.new("TextButton", screenGui)
-    RightBar.Size = UDim2.new(0, config.BarWidth, 0, 120)
+    RightBar.Size = UDim2.new(0, config.BarWidth, 0, 100)  -- Ngắn hơn cho gọn
     RightBar.Text = "<"
     RightBar.Font = Enum.Font.GothamBold
     RightBar.TextSize = 12
@@ -145,17 +146,17 @@ local function CreateSideTabSystem(screenGui, mainFrame)
     -- Nút ẩn (-) cho side tab
     local function CreateHideButton(parent, isLeft)
         local btn = Instance.new("TextButton", parent)
-        btn.Size = UDim2.new(0, 24, 0, 24)
-        btn.Position = isLeft and UDim2.new(1, -28, 0, 6) or UDim2.new(0, 4, 0, 6)
+        btn.Size = UDim2.new(0, 20, 0, 20)  -- Nhỏ hơn
+        btn.Position = isLeft and UDim2.new(1, -24, 0, 6) or UDim2.new(0, 4, 0, 6)
         btn.Text = "-"
         btn.Font = Enum.Font.GothamBold
-        btn.TextSize = 14
+        btn.TextSize = 12
         btn.TextColor3 = Theme.White
         btn.BackgroundColor3 = Theme.MediumGray
         btn.BackgroundTransparency = 0.2
         btn.AutoButtonColor = false
         btn.Active = true
-        Round(btn, 12)
+        Round(btn, 10)
         
         local btnStroke = Instance.new("UIStroke", btn)
         btnStroke.Thickness = 1
@@ -186,7 +187,7 @@ local function CreateSideTabSystem(screenGui, mainFrame)
                 end)
             else
                 -- Hiện left tab với tween trượt từ xa
-                local startPos = mainFrame.Position - UDim2.new(0, config.SideWidth + config.Gap + 20, 0, 0)
+                local startPos = mainFrame.Position - UDim2.new(0, config.SideWidth + config.Gap + 15, 0, 0)
                 local endPos = mainFrame.Position - UDim2.new(0, config.SideWidth + config.Gap, 0, 0)
                 
                 LeftTab.Position = startPos
@@ -211,7 +212,7 @@ local function CreateSideTabSystem(screenGui, mainFrame)
                 end)
             else
                 -- Hiện right tab với tween trượt từ xa
-                local startPos = mainFrame.Position + UDim2.new(0, mainFrame.AbsoluteSize.X + config.Gap + 20, 0, 0)
+                local startPos = mainFrame.Position + UDim2.new(0, mainFrame.AbsoluteSize.X + config.Gap + 15, 0, 0)
                 local endPos = mainFrame.Position + UDim2.new(0, mainFrame.AbsoluteSize.X + config.Gap, 0, 0)
                 
                 RightTab.Position = startPos
@@ -269,14 +270,14 @@ local function CreateSideTabSystem(screenGui, mainFrame)
             return
         end
         
-        -- ĐIỂM SỬA 1: Không cập nhật khi đang animating
+        -- Không cập nhật khi đang animating
         if state.Animating then return end
         
         -- Cập nhật vị trí dựa trên UI chính
         local mainPos = mainFrame.Position
         local mainSize = mainFrame.AbsoluteSize
         
-        -- ĐIỂM SỬA 2: RenderStepped quản lý duy nhất visible
+        -- RenderStepped quản lý duy nhất visible
         if state.LeftOpen then
             LeftTab.Position = mainPos - UDim2.new(0, config.SideWidth + config.Gap, 0, 0)
             LeftTab.Visible = true
@@ -307,7 +308,6 @@ local function CreateSideTabSystem(screenGui, mainFrame)
 end
 
 --================ WINDOW =================--
--- THÊM HÀM NÀY VÀO LIBRARY
 function Library:CreateWindow(config)
     config = config or {}
     local title = config.Title or "Khanhly Hub"
@@ -316,17 +316,18 @@ function Library:CreateWindow(config)
     local ScreenGui = Instance.new("ScreenGui")
     ScreenGui.Name = "KhanhlyUI"
     ScreenGui.ResetOnSpawn = false
-    ScreenGui.Parent = game:GetService("CoreGui")  -- CoreGui để script hoạt động
+    ScreenGui.Parent = game:GetService("CoreGui")
     
-    -- Tạo Main Frame (UI chính)
+    -- ✅ ĐÃ THU NHỎ UI CHÍNH CHO GỌN GÀNG
     local MainFrame = Instance.new("Frame", ScreenGui)
-    MainFrame.Size = UDim2.new(0, 360, 0, 320)
-    MainFrame.Position = UDim2.new(0.5, -180, 0.5, -160)
+    MainFrame.Size = UDim2.new(0, 240, 0, 320)  -- Size chuẩn như UI cũ
+    MainFrame.Position = UDim2.new(0.5, -120, 0.5, -160)  -- Giữa màn hình
     MainFrame.BackgroundColor3 = Theme.Dark
     MainFrame.BackgroundTransparency = 0.15
     MainFrame.Active = true
     MainFrame.Draggable = true
-    Round(MainFrame, 10)
+    MainFrame.Visible = false  -- Ẩn ban đầu, mở bằng Open Button
+    Round(MainFrame, 8)
     
     -- Viền sóng cho Main Frame
     local mainStroke = Instance.new("UIStroke", MainFrame)
@@ -351,41 +352,191 @@ function Library:CreateWindow(config)
     
     -- Title
     local TitleLabel = Instance.new("TextLabel", MainFrame)
-    TitleLabel.Size = UDim2.new(1, -20, 0, 40)
-    TitleLabel.Position = UDim2.new(0, 10, 0, 10)
-    TitleLabel.BackgroundTransparency = 1
+    TitleLabel.Size = UDim2.new(1, 0, 0, 30)
+    TitleLabel.Position = UDim2.new(0, 0, 0, 0)
+    TitleLabel.BackgroundColor3 = Theme.DarkGray
+    TitleLabel.BackgroundTransparency = 0.2
     TitleLabel.Text = title
     TitleLabel.TextColor3 = Theme.Ruby
     TitleLabel.Font = Enum.Font.GothamBold
-    TitleLabel.TextSize = 18
-    TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
+    TitleLabel.TextSize = 14
+    TitleLabel.TextXAlignment = Enum.TextXAlignment.Center
+    Round(TitleLabel, 8)
     
-    -- Tạo Side Tab System (GẮN VÀO ĐÂY)
-    local SideTabs = CreateSideTabSystem(ScreenGui, MainFrame)
+    -- Container cho các control
+    local Container = Instance.new("ScrollingFrame", MainFrame)
+    Container.Position = UDim2.new(0, 5, 0, 35)
+    Container.Size = UDim2.new(1, -10, 1, -40)
+    Container.BackgroundTransparency = 1
+    Container.ScrollBarThickness = 6
+    Container.ScrollBarImageColor3 = Theme.Purple
+    Container.ScrollBarImageTransparency = 0.5
+    Container.AutomaticCanvasSize = Enum.AutomaticSize.Y
     
-    -- Trả về Window object có thể mở rộng
-    local Window = {}
+    local Layout = Instance.new("UIListLayout", Container)
+    Layout.Padding = UDim.new(0, 8)
+    Layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
     
-    -- Method để thêm tab vào UI chính (nếu cần)
-    function Window:CreateTab(name)
-        -- Có thể thêm logic tạo tab nội dung ở đây
-        return {
-            Name = name,
-            AddButton = function(text, callback)
-                print("Button added:", text)
-                -- Thêm button logic
-            end
-        }
+    -- ✅ THÊM OPEN BUTTON (QUAN TRỌNG)
+    local OpenBtn = Instance.new("TextButton", ScreenGui)
+    OpenBtn.Size = UDim2.new(0, 44, 0, 44)
+    OpenBtn.Position = UDim2.new(0, 20, 0.5, -22)
+    OpenBtn.Text = "≡"  -- Icon menu
+    OpenBtn.Font = Enum.Font.GothamBold
+    OpenBtn.TextSize = 20
+    OpenBtn.TextColor3 = Theme.White
+    OpenBtn.BackgroundColor3 = Theme.DarkGray
+    OpenBtn.BackgroundTransparency = 0.2
+    OpenBtn.AutoButtonColor = false
+    OpenBtn.Active = true
+    OpenBtn.Draggable = true  -- Có thể kéo nút
+    Round(OpenBtn, 22)
+    
+    -- Viền sóng cho Open Button
+    local btnStroke = Instance.new("UIStroke", OpenBtn)
+    btnStroke.Thickness = 2
+    btnStroke.Color = Theme.Ruby
+    
+    local btnGradient = Instance.new("UIGradient", btnStroke)
+    btnGradient.Color = ColorSequence.new{
+        ColorSequenceKeypoint.new(0, Theme.Ruby),
+        ColorSequenceKeypoint.new(0.5, Theme.Purple),
+        ColorSequenceKeypoint.new(1, Theme.Ocean)
+    }
+    btnGradient.Rotation = 0
+    
+    -- Animation xoay viền cho Open Button
+    task.spawn(function()
+        while btnGradient and btnGradient.Parent do
+            btnGradient.Rotation = btnGradient.Rotation + 1
+            task.wait(0.03)
+        end
+    end)
+    
+    -- Hiệu ứng hover cho Open Button
+    OpenBtn.MouseEnter:Connect(function()
+        Tween(OpenBtn, TweenInfo.new(0.2), {BackgroundTransparency = 0.1})
+    end)
+    
+    OpenBtn.MouseLeave:Connect(function()
+        Tween(OpenBtn, TweenInfo.new(0.2), {BackgroundTransparency = 0.2})
+    end)
+    
+    -- Logic toggle UI với hiệu ứng
+    local isAnimating = false
+    local uiVisible = false
+    
+    local function toggleUI()
+        if isAnimating then return end
+        isAnimating = true
+        
+        if uiVisible then
+            -- Ẩn UI
+            Tween(MainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                Size = UDim2.new(0, 0, 0, 0),
+                Position = UDim2.new(
+                    MainFrame.Position.X.Scale,
+                    MainFrame.Position.X.Offset + 120,
+                    MainFrame.Position.Y.Scale,
+                    MainFrame.Position.Y.Offset + 160
+                ),
+                BackgroundTransparency = 1
+            }):Play()
+            
+            task.delay(0.3, function()
+                MainFrame.Visible = false
+                uiVisible = false
+                isAnimating = false
+            end)
+        else
+            -- Hiện UI
+            MainFrame.Visible = true
+            MainFrame.Size = UDim2.new(0, 0, 0, 0)
+            MainFrame.Position = UDim2.new(
+                0.5, -120,
+                0.5, -160
+            )
+            MainFrame.BackgroundTransparency = 1
+            
+            Tween(MainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+                Size = UDim2.new(0, 240, 0, 320),
+                Position = UDim2.new(0.5, -120, 0.5, -160),
+                BackgroundTransparency = 0.15
+            }):Play()
+            
+            task.delay(0.3, function()
+                uiVisible = true
+                isAnimating = false
+            end)
+        end
     end
     
-    -- Trả về cả MainFrame và SideTabs để sử dụng bên ngoài
+    -- Xử lý click cho Open Button (cả PC và Mobile)
+    OpenBtn.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or 
+           input.UserInputType == Enum.UserInputType.Touch then
+            toggleUI()
+        end
+    end)
+    
+    -- Tạo Side Tab System
+    local SideTabs = CreateSideTabSystem(ScreenGui, MainFrame)
+    
+    -- Trả về Window object
+    local Window = {}
+    
+    -- Function để thêm button vào UI
+    function Window:CreateButton(text, callback)
+        local btn = Instance.new("TextButton", Container)
+        btn.Size = UDim2.new(0.95, 0, 0, 35)
+        btn.Text = text
+        btn.Font = Enum.Font.Gotham
+        btn.TextSize = 13
+        btn.TextColor3 = Theme.White
+        btn.BackgroundColor3 = Theme.DarkGray
+        btn.AutoButtonColor = false
+        btn.Active = true
+        Round(btn, 6)
+        
+        local btnStroke = Instance.new("UIStroke", btn)
+        btnStroke.Thickness = 1
+        btnStroke.Color = Theme.Purple
+        
+        -- Hiệu ứng hover
+        btn.MouseEnter:Connect(function()
+            Tween(btn, TweenInfo.new(0.2), {BackgroundColor3 = Theme.MediumGray})
+            Tween(btnStroke, TweenInfo.new(0.2), {Color = Theme.Ocean})
+        end)
+        
+        btn.MouseLeave:Connect(function()
+            Tween(btn, TweenInfo.new(0.2), {BackgroundColor3 = Theme.DarkGray})
+            Tween(btnStroke, TweenInfo.new(0.2), {Color = Theme.Purple})
+        end)
+        
+        -- Click
+        btn.MouseButton1Click:Connect(callback)
+    end
+    
+    -- Function để chỉnh sửa Open Button
+    function Window:EditOpenButton(config)
+        if config.Size then OpenBtn.Size = config.Size end
+        if config.Position then OpenBtn.Position = config.Position end
+        if config.Text then OpenBtn.Text = config.Text end
+        if config.TextColor then OpenBtn.TextColor3 = config.TextColor end
+        if config.BackgroundColor then OpenBtn.BackgroundColor3 = config.BackgroundColor end
+        if config.StrokeColor then btnStroke.Color = config.StrokeColor end
+    end
+    
+    -- Trả về các thành phần UI để sử dụng bên ngoài
     return {
         MainFrame = MainFrame,
         LeftTab = SideTabs.LeftTab,
         RightTab = SideTabs.RightTab,
         LeftBar = SideTabs.LeftBar,
         RightBar = SideTabs.RightBar,
-        CreateTab = Window.CreateTab
+        Container = Container,
+        CreateButton = Window.CreateButton,
+        EditOpenButton = Window.EditOpenButton
     }
 end
 return Library
