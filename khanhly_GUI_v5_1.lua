@@ -169,10 +169,10 @@ function KhanhlyV5.new(userConfig)
 		NotifyDuration = tonumber(userConfig.NotifyDuration) or 4.0,
 		DetailDuration = tonumber(userConfig.DetailDuration) or 6.0,
 		WelcomeNotify = parseBool(userConfig.WelcomeNotify, true),
-		WelcomeKicker = userConfig.WelcomeKicker or "ĐẦU TIÊN TRONG SCRIPT ROBLOX",
-		WelcomeTitle = userConfig.WelcomeTitle or "Dynamic Island, dùng thật.",
+		WelcomeKicker = userConfig.WelcomeKicker or "Script khanhlyHuB on top",
+		WelcomeTitle = userConfig.WelcomeTitle or "Dynamic Island, khanhly.",
 		WelcomeMessage = userConfig.WelcomeMessage
-			or "Khanhly Hub V5 đưa Dynamic Island chuẩn Liquid Glass vào script Roblox — chạm vào thông báo để mở bảng chi tiết sống động.",
+			or "Khanhly Hub là một script tối ưu tốt cá nhân hoá về loại farm tất cả logic code về các script được làm chỉnh chu về thiết kế và các loại script khác",
 
 		ClosedWidth = math.clamp(tonumber(userConfig.ClosedWidth) or 268, 220, 340),
 		ClosedHeight = math.clamp(tonumber(userConfig.ClosedHeight) or 40, 34, 56),
